@@ -390,15 +390,36 @@
       return { '0.3':{price:40, material:'LDPE'}, '0.5':{price:65, material:'HDPE'}, '0.75':{price:85, material:'HDPE'} };
     }
     // --- Shipping by weight ---
-const SHIP_RATE_PER_KG = 5;
+// --- Shipping rules (UPDATED) ---
+// ผ้า: คิดตามน้ำหนัก (kg) 5 บาท/กก. ขั้นต่ำ 300, สูงสุด 4,000
+// Geo: คิดตามพื้นที่ (sqm) 5 บาท/ตร.ม. ขั้นต่ำ 300, สูงสุด 4,000
+
+const SHIP_MIN = 300;
 const SHIP_MAX = 4000;
 
+const SHIP_RATE_PER_KG = 5;      // สำหรับ "ผ้า"
+const GEO_SHIP_RATE_PER_SQM = 5; // สำหรับ "Geotextile"
+
 function clampShipping(x){
-  return Math.min(SHIP_MAX, Math.max(0, Math.ceil(x)));
+  // ถ้าไม่มีค่าส่งจริงๆ ให้เป็น 0 (กันเคส input ว่าง)
+  if (x <= 0) return 0;
+  return Math.min(SHIP_MAX, Math.max(SHIP_MIN, Math.ceil(x)));
 }
-function calcShipByWeightKg(weightKg){
+
+function calcShipPlasticByWeightKg(weightKg){
   return clampShipping(weightKg * SHIP_RATE_PER_KG);
 }
+
+function calcShipGeoByAreaSqm(areaSqm){
+  return clampShipping(areaSqm * GEO_SHIP_RATE_PER_SQM);
+}
+
+// ถ้าออเดอร์มีทั้ง "ผ้า + Geo" ให้รวมสูตร แล้วค่อย apply min/max ครั้งเดียว
+function calcShipCombined(plasticKg, geoAreaSqm){
+  const x = (plasticKg * SHIP_RATE_PER_KG) + (geoAreaSqm * GEO_SHIP_RATE_PER_SQM);
+  return clampShipping(x);
+}
+
 function thkToKgPerSqm(thk){ // mm: 0.3 / 0.5 / 0.75
   const t = Number(thk);
   return (t === 0.3) ? 0.3 : (t === 0.5) ? 0.5 : (t === 0.75) ? 0.75 : 0;
@@ -461,7 +482,8 @@ Object.keys(priceList).forEach(k => { priceList[k].price += 10; });
 
       // ค่าส่งตามน้ำหนัก
         const kg = area * thkToKgPerSqm(parseFloat(size.value));  // น้ำหนักรวม (กก.)
-        let shipping = calcShipByWeightKg(kg);
+        let shipping = calcShipPlasticByWeightKg(kg);
+
 
         const sum = Math.floor(total + shipping);
 
@@ -502,13 +524,15 @@ const canalDiscount5 = document.getElementById('canalDiscount5');
 const canalFactoryBlue = document.getElementById('canalFactoryBlue');
 
 canalSizeRadios.forEach(r => r.addEventListener('change', () => {
-  if (r.checked && r.value === '0.5') {
+  const picked = document.querySelector('input[name="canalSize"]:checked');
+  if (picked && picked.value === '0.5') {
     canalWidth.value = 4;
     canalWidth.disabled = true;
   } else {
     canalWidth.disabled = false;
   }
 }));
+
 canalForm.onsubmit = function(e){
   e.preventDefault();
 
@@ -543,7 +567,7 @@ canalForm.onsubmit = function(e){
 
   // ค่าส่งตามน้ำหนัก (LDPE 0.5 = 0.5 kg/ตร.ม.)
   const kg = area * 0.5;
-  const shipping = calcShipByWeightKg(kg);
+  const shipping = calcShipPlasticByWeightKg(kg);
   const sum = Math.floor(total + shipping);
 
   const dep = sum >= 5000 ? Math.floor(sum * 0.1) : 0;
@@ -631,23 +655,26 @@ geoForm.onsubmit = function(e){
   if(!grade || w<=0 || l<=0){ alert('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง'); return; }
 
   const area = w * l;                // พื้นที่ที่ต้องการ
-  const rollW = 4;                   // ส่งเป็นม้วนหน้ากว้าง 4 เมตร
-  const rollL = Math.ceil(area / rollW); // ความยาวม้วนที่ต้องส่งให้ "พื้นที่เท่ากัน"
+  const rollW = 2;                   // ส่งเป็นม้วนหน้ากว้าง 2 เมตร
+const rollL = Math.ceil(area / rollW);
+
 
   const unit = (grade.value === '150') ? 25 : 30;
   const base = Math.floor(area * unit);
 
-// ค่าส่งตามน้ำหนัก Geo (150g=0.15, 200g=0.20 kg/ตร.ม.)
 const kgPerSqm = (grade.value === '150') ? 0.15 : 0.20;
 const kg = area * kgPerSqm;
-const ship = calcShipByWeightKg(kg);
+
+// ✅ ค่าส่ง Geo คิดตาม "ตร.ม." (5 บาท/ตร.ม.) ขั้นต่ำ 300 Max 4,000
+const ship = calcShipGeoByAreaSqm(area);
 const sum = base + ship;
 
 
- let text = `ผ้าใย Geotextile ทางเราจะส่งเป็นม้วนหน้ากว้าง 4 เมตรนะคะ\n`;
+
+ let text = `ผ้าใย Geotextile ทางเราจะส่งเป็นม้วนหน้ากว้าง 2 เมตรนะคะ\n`;
 text += `พื้นที่จะเท่ากันค่ะ สามารถนำไปตัดแต่งใช้งานได้\n\n`;
 text += `ขนาดที่ต้องการ ${w}x${l} ม. = ${area.toLocaleString()} ตร.ม.\n`;
-text += `จัดส่งเป็นม้วน 4x${rollL} ม.\n`;
+text += `จัดส่งเป็นม้วน 2x${rollL} ม.\n`;
 text += `น้ำหนักประมาณ ${kg.toFixed(1)} กก.\n\n`;
 text += `ราคา Geo ${base.toLocaleString()} บาท\n`;
 text += `ค่าส่ง ${ship.toLocaleString()} บาท\n`;
@@ -984,7 +1011,8 @@ ${kit.text}`; }
       // ค่าจัดส่ง: ยอดรวมต่ำกว่า 2,000 มีค่าส่ง 300
       // น้ำหนักผ้า MP Flow 2.0 = 2 kg/ตร.ม.
 const kg = (cloth.areaTotal || 0) * 2.0;
-const ship = calcShipByWeightKg(kg);
+const ship = calcShipPlasticByWeightKg(kg);
+
 const grand = subtotal + ship;
 
 
@@ -1058,14 +1086,15 @@ flatbarReset.classList.remove('hidden');
       const geoL = parseFloat(document.getElementById('summaryGeoLength').value || 0);
       const useDiscount10 = document.getElementById('summaryDiscount10').checked;
 
-      let total=0, areaSum=0, weightKgSum=0, list='', idx=1;
+      let total=0, areaSum=0, weightKgSum=0, plasticKgSum=0, list='', idx=1;
+
 
       tbody.querySelectorAll('tr').forEach(tr=>{
 const code = tr.querySelector('.t').value;
 const w = parseFloat(tr.querySelector('.w').value||0);
 const l = parseFloat(tr.querySelector('.l').value||0);
 const d = parseFloat(tr.querySelector('.d').value||0);
-const q = parseInt(tr.querySelector('.q').value||1);
+const q = parseInt(tr.querySelector('.q').value || 1, 10);
 const isCanal = tr.querySelector('.canal').checked;
 if(w<=0 || l<=0 || q<=0) return;
 
@@ -1087,7 +1116,9 @@ pricePer += 10; // ผ้ากลม +10 บาท/ตร.ม.
 const area = aw*al;
 const thk = Number(THK(code)); // "0.3" / "0.5" / "0.75"
 const kg = area * thkToKgPerSqm(thk) * q;
-weightKgSum += kg;
+weightKgSum += kg;   // ใช้ไว้โชว์น้ำหนักรวม
+plasticKgSum += kg;  // ✅ ใช้คิดค่าส่ง "ผ้า"
+
 
 const cost = Math.floor(area * pricePer * q);
 total += cost;
@@ -1116,9 +1147,10 @@ idx++;
 
         const unit = geo150 ? 25 : 30;
 
-        // ส่งเป็นม้วนหน้ากว้าง 4 เมตร
-        const rollW = 4;
+       // ส่งเป็นม้วนหน้ากว้าง 2 เมตร
+        const rollW = 2;
         const rollL = Math.ceil(geoArea / rollW);
+
 
         geoTotal = Math.floor(geoArea * unit);
 
@@ -1126,7 +1158,7 @@ idx++;
       `📍 รายการ Geotextile:\n`+
       `Geotextile ${geo150 ? '150g' : '200g'} (${unit} บาท/ตร.ม.)\n`+
       `ขนาดที่ต้องการ ${geoW}x${geoL} ม. = ${Math.floor(geoArea).toLocaleString()} ตร.ม.\n`+
-      `จัดส่งเป็นม้วน 4x${rollL} ม.\n`+
+      `จัดส่งเป็นม้วน 2x${rollL} ม.\n`+
       `ราคา Geo ${Math.floor(geoTotal).toLocaleString()} บาท\n\n`;
       }
 
@@ -1146,7 +1178,9 @@ if (useDiscount10 && itemsTotal > 0 && geoTotalSafe > 0) {
 let subtotalItems = (itemsTotal + geoTotalSafe) - discountAmount;
 
 // --- ค่าส่ง ---
-let ship = calcShipByWeightKg(weightKgSum);
+// ✅ ค่าส่งรวม: ผ้า(kg) + Geo(sqm) แล้วค่อย apply min/max ครั้งเดียว
+let ship = calcShipCombined(plasticKgSum, geoArea);
+
 const grand = Math.floor(subtotalItems + ship);
 const dep = grand >= 5000 ? Math.floor(grand * 0.1) : 0;
 const bal = grand - dep;
