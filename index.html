@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>คำนวณค่า ผ้าปูบ่อ • คลองไส้ไก่ • บ่อกลม • เหล็กแบน • สรุปออเดอร์</title>
+  <title>คำนวณค่า ผ้าปูบ่อ • คลองไส้ไก่ • บ่อกลม • MP Flow • สรุปออเดอร์</title>
   <style>
     :root{
       --clr-primary:#2563eb; --clr-primary-dark:#1d4ed8; --clr-secondary:#60a5fa;
@@ -68,13 +68,13 @@
   </style>
 </head>
 <body>
-  <h1>คำนวณค่า ผ้าปูบ่อ / คลองไส้ไก่ / บ่อกลม / เหล็กแบน / สรุปออเดอร์</h1>
+  <h1>คำนวณค่า ผ้าปูบ่อ / คลองไส้ไก่ / บ่อกลม / MP Flow / สรุปออเดอร์</h1>
   <div class="tabs">
     <div class="tab active" data-tab="pond">บ่อขุด</div>
     <div class="tab" data-tab="canal">คลองไส้ไก่</div>
     <div class="tab" data-tab="geo">Geotextile</div>
     <div class="tab" data-tab="circular">บ่อกลม</div>
-    <div class="tab" data-tab="flatbar">เหล็กแบน</div>
+    <div class="tab" data-tab="flatbar">MP Flow</div>
     <div class="tab" data-tab="summary">สรุปออเดอร์</div>
   </div>
 
@@ -179,6 +179,7 @@
       <button type="button" id="flatbarAddCloth" class="btn-secondary" style="margin-bottom:8px">+ เพิ่มรายการผ้า</button>
       <div class="hint">ค่าเริ่มต้นเป็น "ระบุเอง" (คิด 250 บาท/ตร.ม.) • ถ้าเลือกแบบสำเร็จ ระบบจะกรอกกว้าง×ยาวให้อัตโนมัติและคิดราคาตามชุดสำเร็จ</div>
       <label><input type="checkbox" id="flatbarDiscount5"> ใช้ส่วนลดพิเศษ 5% (เฉพาะผ้า)</label>
+      <label><input type="checkbox" id="flatbarIsNim"> เคสขนส่งนิ่ม (ไม่รับนิ่ม/ไม่เข้าเงื่อนไขส่งฟรี)</label>
       
 
       <hr style="opacity:.25; margin:16px 0">
@@ -409,6 +410,19 @@ function clampShipping(x){
 function calcShipPlasticByWeightKg(weightKg){
   return clampShipping(weightKg * SHIP_RATE_PER_KG);
 }
+// --- MP FLOW Shipping (NEW RULE) ---
+// ไม่คิดตามน้ำหนัก
+// ส่งฟรีเมื่อ "ยอดสินค้า (ผ้า+เหล็กแบนหลังส่วนลด) >= 2,000" และไม่ใช่เคสส่งนิ่ม
+// ถ้าไม่ถึง 2,000 ให้คิดค่าส่งเหมา (ตั้งเองได้)
+const MPFLOW_FLAT_SHIP = 300; // ✅ ปรับเลขนี้ได้
+
+function calcShipMPFlow(itemsSubtotal, isNimCase){
+  if(!isNimCase && itemsSubtotal >= 2000) return 0;
+  if(itemsSubtotal <= 0) return 0;
+  return MPFLOW_FLAT_SHIP;
+}
+
+
 
 function calcShipGeoByAreaSqm(areaSqm){
   return clampShipping(areaSqm * GEO_SHIP_RATE_PER_SQM);
@@ -1008,25 +1022,47 @@ ${kit.text}`; }
       let subtotal = clothSum + steelSum;
 
 
-      // ค่าจัดส่ง: ยอดรวมต่ำกว่า 2,000 มีค่าส่ง 300
-      // น้ำหนักผ้า MP Flow 2.0 = 2 kg/ตร.ม.
-const kg = (cloth.areaTotal || 0) * 2.0;
-const ship = calcShipPlasticByWeightKg(kg);
+      // ✅ MP Flow: ไม่คิดค่าส่งตามน้ำหนักแล้ว
+const isNimCase = document.getElementById('flatbarIsNim')?.checked || false;
 
-const grand = subtotal + ship;
+// subtotal = ยอดสินค้า (ผ้า หลังส่วนลด + เหล็กแบน)
+const ship = calcShipMPFlow(subtotal, isNimCase);
+
+
+      const grand = subtotal + ship;
+
 
 
       // มัดจำ 10% เมื่อยอดรวมเกิน 5,000
-      let dep = 0; if(grand>5000){ dep = Math.floor(grand*0.1); }
+      let dep = 0; if(grand>=5000){ dep = Math.floor(grand*0.1); }
       const cod = grand - dep;
 
      if (discAmt > 0) {
   out += `\n\n(ส่วนลดค่าสินค้าผ้า = ${discAmt.toLocaleString()} บาท • ส่วนลดพิเศษ 5%)`;
 }
 
-out += `\n\nน้ำหนักผ้าประมาณ ${kg.toFixed(1)} กก.`;
-out += `\nค่าจัดส่ง ${ship.toLocaleString()} บาท`;
-out += `\n\nรวมยอดทั้งหมด (MP Flow + อุปกรณ์ติดตั้ง) ${grand.toLocaleString()} บาท`;
+if(ship === 0){
+  out += `\nส่งฟรี`;
+}else{
+  out += `\nค่าจัดส่ง ${ship.toLocaleString()} บาท`;
+}
+
+if(!isNimCase && subtotal >= 2000){
+  out += `\n(ส่งฟรีเมื่อยอดสินค้า 2,000 บาทขึ้นไป)`;
+}
+if(isNimCase){
+  out += `\n*หมายเหตุ: เคสขนส่งนิ่ม (ไม่เข้าเงื่อนไขส่งฟรี / โปรดตรวจสอบก่อนส่ง)`;
+}
+
+if(isNimCase){
+  out += `\n*หมายเหตุ: เคสขนส่งนิ่ม (ไม่เข้าเงื่อนไขส่งฟรี / โปรดตรวจสอบก่อนส่ง)`;
+}
+
+const hasKit = steelSum > 0;
+const totalLabel = hasKit ? 'MP Flow + อุปกรณ์ติดตั้ง' : 'MP Flow';
+
+out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLocaleString()} บาท`;
+
 out += `\n\nโอนชำระเมื่อได้รับสินค้า
 ธนาคารกสิกรไทย
 ชื่อบัญชี: บริษัทมนูธรรมพลาสติก
