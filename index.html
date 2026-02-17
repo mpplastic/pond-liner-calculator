@@ -278,6 +278,27 @@ button{
   margin-top: 10px;
   margin-bottom: 20px;
 }
+.table-wrap{
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 16px;                 /* โค้งสวยอยู่ที่ wrapper แทน */
+  border: 1px solid rgba(15,23,42,.10);
+}
+
+/* table ไม่ต้อง overflow hidden แล้ว */
+.table-wrap .items-table{
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  min-width: 720px;                     /* ปรับได้: 680-860 ตามที่อยากให้เลื่อน */
+}
+
+/* กัน iOS บางเครื่อง “จับเลื่อนไม่ติด” */
+.table-wrap{
+  touch-action: pan-x;
+}
   </style>
   
 </head>
@@ -379,6 +400,7 @@ button{
       <textarea id="flatbarCustInfo" placeholder="คัดลอกข้อมูลลูกค้ามาวางที่นี่"></textarea>
 
       <h3 style="margin-top:0">รายการผ้า (จำเป็นต้องเลือกอย่างน้อย 1)</h3>
+      <div class="table-wrap">
       <table class="items-table" id="clothTableFlatbar">
         <thead>
           <tr>
@@ -391,6 +413,7 @@ button{
         </thead>
         <tbody></tbody>
       </table>
+      </div>
       <button type="button" id="flatbarAddCloth" class="btn-secondary" style="margin-bottom:8px">+ เพิ่มรายการผ้า</button>
       <div class="hint">ค่าเริ่มต้นเป็น "ระบุเอง" (คิด 250 บาท/ตร.ม.) • ถ้าเลือกแบบสำเร็จ ระบบจะกรอกกว้าง×ยาวให้อัตโนมัติและคิดราคาตามชุดสำเร็จ</div>
       <label><input type="checkbox" id="flatbarDiscount5"> ใช้ส่วนลดพิเศษ 5% (เฉพาะผ้า)</label>
@@ -405,6 +428,7 @@ button{
 </div>
 
       <h4 style="margin:8px 0">รายการเหล็กแบน</h4>
+      <div class="table-wrap">
       <table class="items-table" id="flatbarItemsTable">
      <thead>
   <tr>
@@ -416,6 +440,7 @@ button{
 
         <tbody></tbody>
       </table>
+      </div>
       <button type="button" id="addFlatbarRow" class="btn-secondary" style="margin-bottom:8px">+ เพิ่มรายการเหล็กแบน</button>
       
 
@@ -512,6 +537,7 @@ button{
       <textarea id="custInfo" placeholder="คัดลอกข้อมูลลูกค้ามาวางที่นี่"></textarea>
 
       <h3 style="margin-top:0">รายการผ้า</h3>
+      <div class="table-wrap">
       <table class="items-table" id="itemsTable">
         <thead>
           <tr>
@@ -526,6 +552,7 @@ button{
         </thead>
         <tbody></tbody>
       </table>
+</div>
       <button type="button" id="addItem" class="btn-secondary">+ เพิ่มรายการ</button>
 
       <label><input type="checkbox" id="summaryDiscount5"> ใช้ส่วนลดพิเศษ 5%</label>
