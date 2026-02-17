@@ -789,7 +789,7 @@ Object.keys(priceList).forEach(k => { priceList[k].price += 10; });
          text += `รบกวนลูกค้าตรวจสอบรายการให้ครบก่อนยืนยันนะคะ ✨\nหากเริ่มผลิตแล้ว จะไม่สามารถแก้ไขหรือยกเลิกได้ค่ะ\n\n`;
         if(shipping<=0) text += `(ส่งฟรี ชำระเงินเมื่อได้รับของค่ะ)`;
         if(sum>=5000){ const dep=Math.floor(sum*0.1), bal=Math.floor(sum-dep); text += `\n✅ ชำระมัดจำ 10% (${dep.toLocaleString()} บาท) เพื่อยืนยันคำสั่งซื้อ\n\n📦 แจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์\n🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 4-6 วัน\nCOD ${bal.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`; }
-        else{ text += `ยืนยันการสั่งซื้อแล้วแจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์ค่ะ\n🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 4-6 วัน\nCOD ${sum.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`; }
+        else{ text += `ยืนยันการสั่งซื้อแล้วแจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์ค่ะ\n🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 6-10 วัน\nCOD ${sum.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`; }
       }
       pondResult.value = text.trim(); pondCopy.classList.remove('hidden'); pondReset.classList.remove('hidden');
     };
@@ -884,7 +884,7 @@ canalForm.onsubmit = function(e){
   }
 
   text += `📦 แจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์\n`;
-  text += `🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 4-6 วัน\n`;
+  text += `🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 6-10 วัน\n`;
   text += `COD ${bal.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`;
 
   canalResult.value = text.trim();
@@ -1514,7 +1514,7 @@ const bal = grand - dep;
 
 
 
-      if(dep) out += `✅ ชำระมัดจำ 10% (${fmt(dep)} บาท)`; out += `\n COD ${fmt(bal)} บาท\n\n`; out += `🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 4-6 วัน`;
+      if(dep) out += `✅ ชำระมัดจำ 10% (${fmt(dep)} บาท)`; out += `\n COD ${fmt(bal)} บาท\n\n`; out += `🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 6-10 วัน`;
       const page = document.getElementById('pageSelect').value; const admin = document.getElementById('adminSelect').value; if(page) out += `\n\nเพจ: ${page}`; if(admin) out += `\nแอดมิน: ${admin}`;
       if (summaryRoundCloth && summaryRoundCloth.checked) {
 out += `\n(ผ้ากลม +10 บาท/ตร.ม.)`;
@@ -1536,3 +1536,4 @@ out += `\n(ผ้ากลม +10 บาท/ตร.ม.)`;
   </script>
 </body>
 </html>
+
