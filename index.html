@@ -6,10 +6,33 @@
   <title>คำนวณค่า ผ้าปูบ่อ • คลองไส้ไก่ • บ่อกลม • MP Flow • สรุปออเดอร์</title>
   <style>
     :root{
-      --clr-primary:#2563eb; --clr-primary-dark:#1d4ed8; --clr-secondary:#60a5fa;
-      --clr-danger:#dc2626; --clr-warning:#facc15; --clr-bg:#ffffff; --clr-card:#ffffff;
-      --clr-muted:#6b7280; --shadow:0 8px 20px rgba(0,0,0,.06); --radius:12px;
-    }
+  /* MP Brand */
+  --mp-black:#0b1220;
+  --mp-dark:#111827;
+  --mp-gray:#6b7280;
+  --mp-light:#f6f7fb;
+
+  --mp-blue:#2563eb;
+  --mp-blue-2:#60a5fa;
+
+  --mp-green:#22c55e;
+  --mp-red:#ef4444;
+  --mp-yellow:#facc15;
+
+  --shadow:0 10px 30px rgba(2,6,23,.10);
+  --radius:16px;
+
+  /* map เดิมให้ไม่พัง */
+  --clr-primary: var(--mp-blue);
+  --clr-primary-dark:#1d4ed8;
+  --clr-secondary: var(--mp-blue-2);
+  --clr-danger: var(--mp-red);
+  --clr-warning: var(--mp-yellow);
+  --clr-bg: var(--mp-light);
+  --clr-card: #ffffff;
+  --clr-muted: var(--mp-gray);
+}
+
     *{box-sizing:border-box;font-family:'Segoe UI', Tahoma, Arial, sans-serif}
     body{margin:0;background:var(--clr-bg);color:#111827}
     h1{ text-align:center; margin:26px 0 18px; font-size:26px; }
@@ -63,9 +86,200 @@
   input[type="number"], input[type="text"], select, textarea{ font-size:18px; min-height:52px; }
   .items-table input[type="number"], .items-table select{ height:56px; font-size:20px; }
   .items-table th, .items-table td{ padding:12px; }
+}/* ===== Global polish ===== */
+body{
+  margin:0;
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(37,99,235,.10), transparent 55%),
+              radial-gradient(900px 500px at 90% 10%, rgba(96,165,250,.12), transparent 55%),
+              var(--clr-bg);
+  color:#0f172a;
 }
 
+h1{
+  text-align:center;
+  margin:22px 0 14px;
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:-.2px;
+}
+h1:after{
+  content:"";
+  display:block;
+  width:88px;
+  height:4px;
+  margin:10px auto 0;
+  border-radius:999px;
+  background: linear-gradient(90deg, var(--mp-blue), var(--mp-blue-2));
+  opacity:.9;
+}
+
+/* Tabs: ทำให้ดู premium + โค้ง + เงา */
+.tabs{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:0 0 14px;
+  padding:0 12px;
+}
+.tab{
+  padding:10px 14px;
+  cursor:pointer;
+  background: rgba(255,255,255,.75);
+  backdrop-filter: blur(10px);
+  border-radius:999px;
+  border:1px solid rgba(15,23,42,.08);
+  transition:.22s;
+  font-weight:800;
+  color:#0f172a;
+  box-shadow: 0 6px 18px rgba(2,6,23,.06);
+}
+.tab:hover{ transform: translateY(-1px); }
+.tab.active{
+  background: linear-gradient(135deg, var(--mp-blue), var(--mp-blue-2));
+  color:#fff;
+  border-color: transparent;
+}
+
+/* Container */
+.container{
+  max-width: 1040px;
+  margin: 0 auto 26px;
+  padding: 20px;
+  background: rgba(255,255,255,.85);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(15,23,42,.06);
+}
+
+/* Inputs */
+label{ font-weight:800; color:#0f172a; }
+.radio-group label{ font-weight:700; color:#111827; }
+input[type="number"], input[type="text"], select, textarea{
+  border:1px solid rgba(15,23,42,.10);
+  border-radius: 14px;
+  background:#fff;
+}
+textarea{ background: #f8fafc; }
+
+/* Buttons ให้เข้าธีม MP */
+button{ border-radius:14px; }
+.btn-primary{
+  background: linear-gradient(135deg, var(--mp-blue), var(--mp-blue-2));
+  color:#fff;
+  box-shadow: 0 10px 20px rgba(37,99,235,.18);
+}
+.btn-primary:hover{ filter:brightness(.98); transform: translateY(-1px); }
+.btn-secondary{ background:#0f172a; color:#fff; }
+.btn-secondary:hover{ filter:brightness(1.05); }
+.btn-warning{ background:#fde047; color:#111827; }
+.btn-danger{ background:#ef4444; color:#fff; }
+.copy-btn{
+  background: #0f172a;
+  box-shadow: 0 10px 20px rgba(2,6,23,.14);
+}
+.copy-btn:hover{ filter:brightness(1.05); }
+
+/* Table */
+.items-table{
+  border-radius: 16px;
+  border:1px solid rgba(15,23,42,.10);
+  overflow:hidden;
+}
+.items-table thead{
+  background: linear-gradient(135deg, #0f172a, #1f2a44);
+  color:#fff;
+}
+.items-table tbody tr:nth-child(odd){ background:#f8fafc; }
+
+/* Hint */
+.hint{
+  color:#475569;
+  font-size:13px;
+  background: rgba(37,99,235,.06);
+  border:1px dashed rgba(37,99,235,.25);
+  padding:10px 12px;
+  border-radius:14px;
+}
+
+/* ===== Summary highlight (ใหญ่ขึ้น + เด่นขึ้น) ===== */
+#summaryContainer{
+  max-width: 1100px;
+  border: 2px solid rgba(37,99,235,.25);
+  box-shadow: 0 18px 50px rgba(37,99,235,.10);
+}
+
+/* กล่อง “สรุป” แบบใหญ่ */
+#summaryResult{
+  min-height: 520px !important;   /* ✅ ทำช่องผลลัพธ์ให้ใหญ่ขึ้น */
+  font-size: 16px;
+  line-height: 1.7;
+
+  background: #ffffff;            /* ✅ จากดำ -> ขาว */
+  color: #0f172a;                 /* ✅ ตัวหนังสือเข้มอ่านง่าย */
+
+  border: 1px solid rgba(15,23,42,.12);
+  border-radius: 18px;
+  padding: 18px;
+
+  box-shadow: 0 14px 40px rgba(2,6,23,.08);
+}
+
+
+/* ปุ่มคัดลอกใน Summary ให้ใหญ่ขึ้น */
+#summaryCopy{
+  width:100%;
+  justify-content:center;
+  font-size: 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+}
+
+/* Mobile */
+@media (max-width:600px){
+  h1{ font-size:18px; }
+  .container{ padding:14px; }
+  #summaryResult{ min-height: 360px !important; font-size: 16px; }
+  .tab{ padding:9px 12px; font-size:13px; }
+}
+.summary-head{
+  background: linear-gradient(135deg, rgba(37,99,235,.08), rgba(96,165,250,.08));
+  border: 1px solid rgba(101, 145, 238, 0.18);
+  margin-top: 20px;      /* เว้นจากขอบบน */
+  margin-bottom: 20px;   /* เว้นจากฟอร์มด้านล่าง */
+  padding: 20px 24px;    /* เพิ่ม padding ซ้าย-ขวา */
+}
+.summary-head .badge{
+  display:inline-block;
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:.6px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#0f172a;
+  color:#fff;
+}
+.summary-head .title{
+  margin-top:8px;
+  font-weight:900;
+  font-size:18px;
+  color:#0f172a;
+}
+.summary-head .sub{
+  margin-top:4px;
+  font-size:13px;
+  color:#334155;
+}
+textarea{
+  min-height: 320px;
+}
+button{
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
   </style>
+  
 </head>
 <body>
   <h1>คำนวณค่า ผ้าปูบ่อ / คลองไส้ไก่ / บ่อกลม / MP Flow / สรุปออเดอร์</h1>
@@ -285,6 +499,14 @@
 
   <!-- SUMMARY (ไม่รวมเหล็กแบน) -->
   <div class="container hidden" id="summaryContainer">
+    <div class="summary-head">
+  <div class="summary-title">
+    <div class="badge">MP • ORDER SUMMARY</div>
+    <div class="title">สรุปออเดอร์ (สำคัญ)</div>
+    <div class="sub">กรอกข้อมูลให้ครบ → กด “ยืนยันสรุปออเดอร์” → กดคัดลอกส่งลูกค้า</div>
+  </div>
+</div>
+
     <form id="summaryForm">
       <label>ข้อมูลผู้รับ (ชื่อ-ที่อยู่-เบอร์โทร)</label>
       <textarea id="custInfo" placeholder="คัดลอกข้อมูลลูกค้ามาวางที่นี่"></textarea>
