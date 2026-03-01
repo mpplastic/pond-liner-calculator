@@ -353,7 +353,7 @@ button{
       <input type="number" id="pondDepth" step="0.01" placeholder="กรอกความลึก (ถ้ามี)">
 
       <label><input type="checkbox" id="pondDiscount5" value="yes"> ใช้ส่วนลดพิเศษ 5%</label>
-      <label><input type="checkbox" id="pondFactoryBlue" value="yes"> เพจ "น้ำเงิน ราคาโรงงาน" (ใช้ราคา 40/60/80/100 บาท/ตร.ม.)</label>
+      <label><input type="checkbox" id="pondFactoryBlue" value="yes"> เพจ "น้ำเงิน ราคาโรงงาน" (ใช้ราคา 50/60/80/100 บาท/ตร.ม.)</label>
       <label><input type="checkbox" id="pondRoundCloth" value="yes"> ผ้ากลม (+10 บาท/ตร.ม.)</label>
       
 
@@ -564,7 +564,6 @@ button{
             <th>กว้าง (ม.)</th>
             <th>ยาว (ม.)</th>
             <th>ลึก (ม.)</th>
-            <th>คลองไส้ไก่?</th>
             <th>จำนวน</th>
             <th>ลบ</th>
           </tr>
@@ -575,7 +574,7 @@ button{
       <button type="button" id="addItem" class="btn-secondary">+ เพิ่มรายการ</button>
 
       <label><input type="checkbox" id="summaryDiscount5"> ใช้ส่วนลดพิเศษ 5%</label>
-      <label><input type="checkbox" id="summaryFactoryBlue"> เพจ "น้ำเงิน ราคาโรงงาน" (0.3L=40, 0.5L=50, 0.5H=60, 0.75H=80 บาท/ตร.ม.)</label>
+      <label><input type="checkbox" id="summaryFactoryBlue"> เพจ "น้ำเงิน ราคาโรงงาน" (0.3L=50, 0.5L=50, 0.5H=60, 0.75H=80 บาท/ตร.ม.)</label>
       <label><input type="checkbox" id="summaryRoundCloth"> ผ้ากลม (+10 บาท/ตร.ม.)</label>
       <hr style="opacity:.25; margin:16px 0">
 
@@ -1511,25 +1510,31 @@ function collectGeoSummaryItems(){
 
   return items;
 }
-    const addRow = () => { const tr = document.createElement('tr'); tr.innerHTML = `
-        <td><select class="t">
-          <option value="0.3L">LDPE 0.3</option>
-          <option value="0.3L_CANAL">คลองไส้ไก่ LDPE 0.3</option>
-          <option value="0.5L">LDPE 0.5</option>
-          <option value="0.5H">HDPE 0.5</option>
-          <option value="0.75H">HDPE 0.75</option>
-          <option value="1.0H">HDPE 1.0</option>
-
-        </select></td>
-        <td><input class="w" type="number" step="0.01"></td>
-        <td><input class="l" type="number" step="0.01"></td>
-        <td><input class="d" type="number" step="0.01"></td>
-        <td><input class="q" type="number" value="1" min="1"></td>
-        <td><button type="button" class="btn-danger del">ลบ</button></td>`; tr.querySelector('.del').onclick = () => tr.remove(); tbody.appendChild(tr); };
+    const addRow = () => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><select class="t">
+      <option value="0.3L">LDPE 0.3</option>
+      <option value="0.3L_CANAL">คลองไส้ไก่ LDPE 0.3</option>
+      <option value="0.5L">LDPE 0.5</option>
+      <option value="0.5H">HDPE 0.5</option>
+      <option value="0.75H">HDPE 0.75</option>
+      <option value="1.0H">HDPE 1.0</option>
+    </select></td>
+    <td><input class="w" type="number" step="0.01" min="0.01" placeholder="กว้าง"></td>
+    <td><input class="l" type="number" step="0.01" min="0.01" placeholder="ยาว"></td>
+    <td><input class="d" type="number" step="0.01" min="0" placeholder="ลึก (ถ้ามี)"></td>
+    <td><input class="q" type="number" value="1" min="1"></td>
+    <td><button type="button" class="btn-danger del">ลบ</button></td>
+  `;
+  tr.querySelector('.del').onclick = () => tr.remove();
+  tbody.appendChild(tr);
+};
     addRow(); document.getElementById('addItem').onclick = addRow;
 
     document.getElementById('summaryForm').onsubmit = (e)=>{
       e.preventDefault();
+      
       const cust = document.getElementById('custInfo').value.trim();
       const useFactory = document.getElementById('summaryFactoryBlue').checked; 
       const useDiscount = document.getElementById('summaryDiscount5').checked;
@@ -1581,7 +1586,7 @@ pricePer += 10; // ผ้ากลม +10 บาท/ตร.ม.
 
 
 const area = aw*al;
-const thk = Number(THK(code)); // "0.3" / "0.5" / "0.75"
+const thk = parseFloat(THK(baseCode));
 const kg = area * thkToKgPerSqm(thk) * q;
 weightKgSum += kg;   // ใช้ไว้โชว์น้ำหนักรวม
 plasticKgSum += kg;  // ✅ ใช้คิดค่าส่ง "ผ้า"
@@ -1592,14 +1597,14 @@ total += cost;
 areaSum += area*q;
 
 
-list += `📍 รายการ ${idx}:\n`+
-`ผ้าพลาสติก ${MAT(baseCode)} หนา ${THK(baseCode)} มม. (${pricePer} บาท/ตร.ม.)\n`
-`ผ้าขนาด ${aw} × ${al} ม. = ${fmt(area)} ตร.ม.\n`+
+list +=
+`📍 รายการ ${idx}:\n` +
+`ผ้าพลาสติก ${MAT(baseCode)} หนา ${THK(baseCode)} มม. (${pricePer} บาท/ตร.ม.)\n` +
+`ผ้าขนาด ${aw} × ${al} ม. = ${fmt(area)} ตร.ม.\n` +
 `ราคาผ้า ${fmt(cost)} บาท\n`;
 if(q>1) list += `จำนวน ${q} ผืน\n`;
 idx++;
 });
-      if(total===0) return alert('กรุณากรอกอย่างน้อย 1 รายการ');
       let geoTotal = 0;
       let geoText = '';
       let geoArea = 0;
@@ -1636,6 +1641,12 @@ idx++;
         }
       }
 
+      // ✅ อนุญาตให้สรุปได้ แม้มีแค่ Geo อย่างเดียว
+if (total === 0 && geoTotal === 0) {
+  alert('กรุณากรอกอย่างน้อย 1 รายการ (ผ้า หรือ Geotextile)');
+  return;
+}
+
       // --- รวมยอดสินค้า (ผ้า + geo) ---
 let itemsTotal = total;          // total = ยอดผ้าจากตาราง
 let geoTotalSafe = geoTotal || 0;
@@ -1660,7 +1671,9 @@ const dep = grand >= 5000 ? Math.floor(grand * 0.1) : 0;
 const bal = grand - dep;
 
 
-      let out = cust ? `ส่ง\n${cust}\n\n${list}${geoText}` : `${list}${geoText}`;
+      let out = cust ? `ส่ง\n${cust}\n\n` : '';
+if (list) out += `${list}\n`;
+if (geoText) out += `${geoText}\n`;
       // ให้ “ค่าจัดส่ง/ส่งฟรี” มาก่อนสรุปยอด
       out += `น้ำหนักรวมประมาณ ${weightKgSum.toFixed(1)} กก.\n`;
 
