@@ -299,6 +299,24 @@ button{
 .table-wrap{
   touch-action: pan-x;
 }
+/* ===== GEO TABLE: ทำหัวตารางให้สีต่างจากรายการผ้า ===== */
+#geoItemsTableSummary thead{
+  background: linear-gradient(135deg, #0ea5e9, #22c55e); /* ฟ้า-เขียว */
+  color:#fff;
+}
+
+#geoItemsTableSummary thead th{
+  color:#fff;
+}
+
+/* (เสริม) ให้แถบ Geo ดูแยกจากตารางบนมากขึ้น */
+#geoItemsTableSummary{
+  border: 1px solid rgba(34,197,94,.25);
+}
+
+#geoItemsTableSummary tbody tr:nth-child(odd){
+  background: rgba(34,197,94,.06);
+}
   </style>
   
 </head>
@@ -352,19 +370,20 @@ button{
   <!-- CANAL -->
   <div class="container hidden" id="canalContainer">
     <form id="canalForm">
-      <label>เลือกความหนา (มม.):</label>
+     <label>เลือกความหนา (มม.):</label>
       <div class="radio-group">
         <label><input type="radio" name="canalSize" value="0.5" required> 0.5 มม. (LDPE)</label>
+        <label><input type="radio" name="canalSize" value="0.3" required> 0.3 มม. (LDPE) — 40 บาท/ตร.ม.</label>
       </div>
       <label>ความกว้าง (เมตร):</label>
       <input type="number" id="canalWidth" step="0.01" placeholder="กรอกความกว้าง" required>
       <label>ความยาว (เมตร):</label>
       <input type="number" id="canalLength" step="0.01" placeholder="กรอกความยาว" required>
-      <label>ความลึก (เมตร, ไม่บังคับ):</label>
-      <input type="number" id="canalDepth" step="0.01" placeholder="กรอกความลึก (ถ้ามี)">
       <label><input type="checkbox" id="canalDiscount5" value="yes"> ใช้ส่วนลดพิเศษ 5%</label>
-      <label><input type="checkbox" id="canalFactoryBlue" value="yes"> เพจ "น้ำเงิน ราคาโรงงาน" (LDPE 0.5 = 50 บาท/ตร.ม.)</label>
-      
+      <label id="canalFactoryBlueWrap">
+      <input type="checkbox" id="canalFactoryBlue" value="yes">
+      เพจ "น้ำเงิน ราคาโรงงาน" (LDPE 0.5 = 50 บาท/ตร.ม.)
+    </label>
 
 
       <button type="submit" class="btn-primary">คำนวณ</button>
@@ -560,21 +579,33 @@ button{
       <label><input type="checkbox" id="summaryRoundCloth"> ผ้ากลม (+10 บาท/ตร.ม.)</label>
       <hr style="opacity:.25; margin:16px 0">
 
-<label><input type="checkbox" id="summaryGeo150"> เพิ่ม Geotextile 150g (25 บาท/ตร.ม.)</label>
-<label><input type="checkbox" id="summaryGeo200"> เพิ่ม Geotextile 200g (30 บาท/ตร.ม.)</label>
+<hr style="opacity:.25; margin:16px 0">
 
-<div class="row">
-  <div>
-    <label>Geotextile กว้าง (ม.)</label>
-    <input type="number" id="summaryGeoWidth" step="0.01" placeholder="เช่น 5">
-  </div>
-  <div>
-    <label>Geotextile ยาว (ม.)</label>
-    <input type="number" id="summaryGeoLength" step="0.01" placeholder="เช่น 50">
-  </div>
+<h3 style="margin-top:0">รายการ Geotextile</h3>
+
+<div class="table-wrap">
+  <table class="items-table" id="geoItemsTableSummary">
+    <thead>
+      <tr>
+        <th>Geo เกรด</th>
+        <th>กว้าง (ม.)</th>
+        <th>ยาว (ม.)</th>
+        <th>จำนวน</th>
+        <th>ลบ</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<button type="button" id="addGeoItemSummary" class="btn-secondary">+ เพิ่มรายการ Geotextile</button>
+
+<div class="hint">
+  ระบบจะสรุปเป็น “ม้วนหน้ากว้าง 2 เมตร” ให้อัตโนมัติ (2xความยาว) • เพิ่มได้หลายรายการ
 </div>
 
 <label><input type="checkbox" id="summaryDiscount10"> ส่วนลด 10% (โปรรีวิว ผ้า + Geo)</label>
+
 
 
       <label>เลือกเพจ</label>
@@ -639,14 +670,14 @@ button{
    function getPondPriceList(isFactory){
   if(isFactory){
     return {
-      '0.3': { price:40,  material:'LDPE' },
+      '0.3': { price:50,  material:'LDPE' },
       '0.5': { price:60,  material:'HDPE' },
       '0.75':{ price:80,  material:'HDPE' },
       '1.0': { price:100, material:'HDPE' } // ✅ ราคาเต็ม
     };
   }
   return {
-    '0.3': { price:40,  material:'LDPE' },
+    '0.3': { price:50,  material:'LDPE' },
     '0.5': { price:65,  material:'HDPE' },
     '0.75':{ price:85,  material:'HDPE' },
     '1.0': { price:105, material:'HDPE' } // ✅ ราคาเต็ม
@@ -673,16 +704,24 @@ function clampShipping(x){
 function calcShipPlasticByWeightKg(weightKg){
   return clampShipping(weightKg * SHIP_RATE_PER_KG);
 }
-// --- MP FLOW Shipping (NEW RULE) ---
-// ไม่คิดตามน้ำหนัก
-// ส่งฟรีเมื่อ "ยอดสินค้า (ผ้า+เหล็กแบนหลังส่วนลด) >= 2,000" และไม่ใช่เคสส่งนิ่ม
-// ถ้าไม่ถึง 2,000 ให้คิดค่าส่งเหมา (ตั้งเองได้)
-const MPFLOW_FLAT_SHIP = 300; // ✅ ปรับเลขนี้ได้
 
-function calcShipMPFlow(itemsSubtotal, isNimCase){
-  if(!isNimCase && itemsSubtotal >= 2000) return 0;
+// --- MP FLOW Shipping (UPDATED RULE: กันค่าส่งซ้อน) ---
+// เงื่อนไข:
+// - ยอด < 2000: ปกติ 300, ถ้าเคสนิ่ม/ไม่รับนิ่ม 500
+// - ยอด >= 2000: ปกติส่งฟรี 0, ถ้าเคสนิ่ม/ไม่รับนิ่ม 500
+
+const MPFLOW_SHIP_STD = 300;
+const MPFLOW_SHIP_NIM = 500;
+
+function calcShipMPFlow(itemsSubtotal, isNimNoAccept){
   if(itemsSubtotal <= 0) return 0;
-  return MPFLOW_FLAT_SHIP;
+
+  // ✅ ถ้าเป็นเคสนิ่ม/ไม่รับนิ่ม -> 500 เสมอ (ไม่สนยอดถึง/ไม่ถึง 2000)
+  if(isNimNoAccept) return MPFLOW_SHIP_NIM;
+
+  // ✅ ไม่ใช่เคสนิ่ม
+  if(itemsSubtotal >= 2000) return 0;   // ส่งฟรี
+  return MPFLOW_SHIP_STD;              // ไม่ถึง 2000
 }
 
 
@@ -796,62 +835,94 @@ Object.keys(priceList).forEach(k => { priceList[k].price += 10; });
     pondCopy.onclick = ()=>{ pondResult.select(); document.execCommand('copy'); alert('คัดลอกข้อความแล้ว'); };
     pondReset.onclick = ()=>{ pondForm.reset(); pondResult.value=''; pondCopy.classList.add('hidden'); pondReset.classList.add('hidden'); };
 
-    // ---------- CANAL LOGIC (FIXED) ----------
+    // ---------- CANAL LOGIC (UPDATED: no depth + lock width by thickness) ----------
 const canalForm = document.getElementById('canalForm');
 const canalWidth = document.getElementById('canalWidth');
 const canalLength = document.getElementById('canalLength');
-const canalDepth = document.getElementById('canalDepth');
 const canalResult = document.getElementById('canalResult');
 const canalCopy = document.getElementById('canalCopy');
 const canalReset = document.getElementById('canalReset');
 const canalSizeRadios = document.querySelectorAll('input[name="canalSize"]');
 const canalDiscount5 = document.getElementById('canalDiscount5');
-const canalFactoryBlue = document.getElementById('canalFactoryBlue');
+const canalFactoryBlue = document.getElementById('canalFactoryBlue'); // ยังใช้กับ 0.5 ได้ (50)
 
-canalSizeRadios.forEach(r => r.addEventListener('change', () => {
+// ✅ ล็อคความกว้าง:
+// - LDPE 0.5 => 4 เมตร
+// - LDPE 0.3 => 6 เมตร
+function applyCanalWidthLock(){
   const picked = document.querySelector('input[name="canalSize"]:checked');
-  if (picked && picked.value === '0.5') {
+  const blueWrap = document.getElementById('canalFactoryBlueWrap');
+
+  if(!picked){
+    canalWidth.disabled = false;
+    if (canalFactoryBlue) canalFactoryBlue.disabled = false;
+    if (blueWrap) blueWrap.classList.remove('hidden');
+    return;
+  }
+
+  if(picked.value === '0.5'){
     canalWidth.value = 4;
     canalWidth.disabled = true;
-  } else {
-    canalWidth.disabled = false;
-  }
-}));
 
+    // เปิดให้ใช้ “น้ำเงิน” ได้
+    if (canalFactoryBlue) canalFactoryBlue.disabled = false;
+    if (blueWrap) blueWrap.classList.remove('hidden');
+
+  }else if(picked.value === '0.3'){
+    canalWidth.value = 6;
+    canalWidth.disabled = true;
+
+    // ปิด “น้ำเงิน” เพราะ 0.3 fix 40
+    if (canalFactoryBlue){
+      canalFactoryBlue.checked = false;
+      canalFactoryBlue.disabled = true;
+    }
+    if (blueWrap) blueWrap.classList.add('hidden');
+
+  }else{
+    canalWidth.disabled = false;
+    if (canalFactoryBlue) canalFactoryBlue.disabled = false;
+    if (blueWrap) blueWrap.classList.remove('hidden');
+  }
+}
+
+canalSizeRadios.forEach(r => r.addEventListener('change', applyCanalWidthLock));
+applyCanalWidthLock();
 canalForm.onsubmit = function(e){
   e.preventDefault();
 
   const size = document.querySelector('input[name="canalSize"]:checked');
   let w = parseFloat(canalWidth.value);
   let l = parseFloat(canalLength.value);
-  let d = parseFloat(canalDepth.value || 0);
 
   if(!size || !(w>0) || !(l>0)){
     alert('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
     return;
   }
 
-  const ow = w, ol = l;
-
-  // คลองไส้ไก่: เผื่อขอบข้างละ 0.5 ม. => รวม +1 (ถ้ามีความลึก)
-  if(d>0){
-    w = w + d*2 + 1;
-    l = l + d*2 + 1;
-  }
-
   const mat = 'LDPE';
-  const pricePerSqm = (canalFactoryBlue.checked ? 50 : 60);
   const area = w * l;
+
+  // ✅ ราคา:
+  // - LDPE 0.3 => 40 บาท/ตร.ม. (fix)
+  // - LDPE 0.5 => 60 บาท/ตร.ม. (หรือ 50 ถ้า factory blue)
+  let pricePerSqm = 0;
+  if(size.value === '0.3'){
+    pricePerSqm = 40; // ✅ ตามที่ขอ
+  }else{
+    pricePerSqm = (canalFactoryBlue && canalFactoryBlue.checked) ? 50 : 60;
+  }
 
   let total = Math.floor(area * pricePerSqm);
 
   // ส่วนลด 5% (เฉพาะค่าสินค้า)
-  if(canalDiscount5.checked){
+  if(canalDiscount5 && canalDiscount5.checked){
     total = Math.floor(total * 0.95);
   }
 
-  // ค่าส่งตามน้ำหนัก (LDPE 0.5 = 0.5 kg/ตร.ม.)
-  const kg = area * 0.5;
+  // ค่าส่งตามน้ำหนัก (kg/ตร.ม. = ความหนา mm)
+  const thk = parseFloat(size.value); // 0.3 หรือ 0.5
+  const kg = area * thk;
   const shipping = calcShipPlasticByWeightKg(kg);
   const sum = Math.floor(total + shipping);
 
@@ -859,12 +930,11 @@ canalForm.onsubmit = function(e){
   const bal = sum - dep;
 
   let text = `📍 รายการ:\n`;
-  text += `ผ้าพลาสติก ${mat} หนา 0.5 มม. (${pricePerSqm} บาท/ตร.ม.)\n`;
-  text += `ขนาด ${ow} ม. × ${ol} ม.${d>0?` ลึก ${d} ม.`:''}\n`;
-  text += `ผ้าขนาด ${w} ม. × ${l} ม. = ${area.toLocaleString()} ตร.ม.\n\n`;
+  text += `ผ้าพลาสติก ${mat} หนา ${size.value} มม. (${pricePerSqm} บาท/ตร.ม.)\n`;
+  text += `ขนาด ${w} ม. × ${l} ม. = ${area.toLocaleString()} ตร.ม.\n\n`;
   text += `น้ำหนักประมาณ ${kg.toFixed(1)} กก.\n`;
 
-  if(canalDiscount5.checked){
+  if(canalDiscount5 && canalDiscount5.checked){
     text += `(โปรรีวิว ลด 5%)\n`;
   }
 
@@ -872,7 +942,8 @@ canalForm.onsubmit = function(e){
   if(shipping>0) text += `ค่าจัดส่ง ${shipping.toLocaleString()} บาท\n`;
   text += `📌 สรุปยอดสั่งซื้อทั้งหมด: ${sum.toLocaleString()} บาท\n`;
 
-  if(canalFactoryBlue.checked){
+  // แสดงราคาโรงงานเฉพาะกรณี 0.5 และติ๊ก factory blue
+  if(size.value === '0.5' && canalFactoryBlue && canalFactoryBlue.checked){
     text += `(ราคาโรงงาน เพจน้ำเงิน)\n`;
   }
 
@@ -892,10 +963,17 @@ canalForm.onsubmit = function(e){
   canalReset.classList.remove('hidden');
 };
 
-
 canalCopy.onclick = ()=>{ canalResult.select(); document.execCommand('copy'); alert('คัดลอกข้อความแล้ว'); };
-canalReset.onclick = ()=>{ canalForm.reset(); canalWidth.disabled=false; canalResult.value=''; canalCopy.classList.add('hidden'); canalReset.classList.add('hidden'); };
-
+canalReset.onclick = ()=>{
+  canalForm.reset();
+  canalWidth.disabled = false;
+  canalResult.value='';
+  canalCopy.classList.add('hidden');
+  canalReset.classList.add('hidden');
+  const blueWrap = document.getElementById('canalFactoryBlueWrap');
+if (blueWrap) blueWrap.classList.remove('hidden');
+if (canalFactoryBlue) canalFactoryBlue.disabled = false;
+};
     // ---------- CIRCULAR LOGIC ----------
     const circularForm = document.getElementById('circularForm');
     const circularResult = document.getElementById('circularResult');
@@ -986,23 +1064,48 @@ geoReset.onclick = ()=>{ geoForm.reset(); geoResult.value=''; geoCopy.classList.
     const clothTableBody = document.querySelector('#clothTableFlatbar tbody');
     const btnAddCloth = document.getElementById('flatbarAddCloth');
 
-    const CLOTH_PRESETS = { '4x3':2400, '4x3.5':2800, '6x3.5':4200, '6x4':4800, '7x3.5':4900, '7x4':5600, '8x4':6500, '8x5':8500 };
-    const PRESET_SIZES = { '4x3':{w:4,l:3}, '4x3.5':{w:4,l:3.5}, '6x3.5':{w:6,l:3.5}, '6x4':{w:6,l:4}, '7x3.5':{w:7,l:3.5}, '7x4':{w:7,l:4}, '8x4':{w:8,l:4}, '8x5':{w:8,l:5} };
+    const CLOTH_PRESETS = {
+  '4x3':   2600,
+  '4x3.5': 3000,
+
+  '6x3':   3960,
+  '6x3.5': 4600,
+  '6x4':   5300,
+  '7x3.5': 5400,
+  '7x4':   6150,
+
+  '8x4':   7000,
+  '8x5':   8800
+};
+    const PRESET_SIZES = {
+  '4x3':   { w:4, l:3 },
+  '4x3.5': { w:4, l:3.5 },
+
+  '6x3':   { w:6, l:3 },
+  '6x3.5': { w:6, l:3.5 },
+  '6x4':   { w:6, l:4 },
+  '7x3.5': { w:7, l:3.5 },
+  '7x4':   { w:7, l:4 },
+
+  '8x4':   { w:8, l:4 },
+  '8x5':   { w:8, l:5 }
+};
 
     function makeClothRow(defaultType='custom'){
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>
           <select class="ptype">
-            <option value="custom" selected>ระบุเอง</option>
-            <option value="4x3">4 ม. × 3 ม. — 2,400</option>
-            <option value="4x3.5">4 ม. × 3.5 ม. — 2,800</option>
-            <option value="6x3.5">6 ม. × 3.5 ม. — 4,200</option>
-            <option value="6x4">6 ม. × 4 ม. — 4,800</option>
-            <option value="7x3.5">7 ม. × 3.5 ม. — 4,900</option>
-            <option value="7x4">7 ม. × 4 ม. — 5,600</option>
-            <option value="8x4">8 ม. × 4 ม. — 6,500</option>
-            <option value="8x5">8 ม. × 5 ม. — 8,500</option>
+           <option value="custom" selected>ระบุเอง</option>
+            <option value="4x3">4 ม. × 3 ม. — 2,600</option>
+            <option value="4x3.5">4 ม. × 3.5 ม. — 3,000</option>
+            <option value="6x3">6 ม. × 3 ม. — 3,960</option>
+            <option value="6x3.5">6 ม. × 3.5 ม. — 4,600</option>
+            <option value="6x4">6 ม. × 4 ม. — 5,300</option>
+            <option value="7x3.5">7 ม. × 3.5 ม. — 5,400</option>
+            <option value="7x4">7 ม. × 4 ม. — 6,150</option>
+            <option value="8x4">8 ม. × 4 ม. — 7,000</option>
+            <option value="8x5">8 ม. × 5 ม. — 8,800</option>
           </select>
         </td>
         <td><input type="number" class="cw" step="0.1" min="0.1" placeholder="กว้าง (ม.)"></td>
@@ -1361,9 +1464,57 @@ flatbarReset.classList.remove('hidden');
     // ---------- SUMMARY LOGIC (ไม่มีเหล็กแบน) ----------
     const tbody = document.querySelector('#itemsTable tbody');
     const summaryRoundCloth = document.getElementById('summaryRoundCloth');
+    // --- SUMMARY GEO (multiple rows) ---
+const geoTbodySummary = document.querySelector('#geoItemsTableSummary tbody');
+const addGeoBtnSummary = document.getElementById('addGeoItemSummary');
+
+function addGeoRowSummary(){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>
+      <select class="g">
+        <option value="150">150g (25)</option>
+        <option value="200">200g (30)</option>
+      </select>
+    </td>
+    <td><input class="gw" type="number" step="0.01" min="0.01" placeholder="เช่น 4"></td>
+    <td><input class="gl" type="number" step="0.01" min="0.01" placeholder="เช่น 10"></td>
+    <td><input class="gq" type="number" value="1" min="1"></td>
+    <td><button type="button" class="btn-danger gdel">ลบ</button></td>
+  `;
+  tr.querySelector('.gdel').onclick = ()=> tr.remove();
+  geoTbodySummary.appendChild(tr);
+}
+
+if(addGeoBtnSummary){
+  addGeoBtnSummary.onclick = addGeoRowSummary;
+  // ค่าเริ่มต้น: ไม่ต้องใส่แถวเอง (ให้ผู้ใช้กดเพิ่ม) — ถ้าอยากให้มี 1 แถว default ให้ uncomment:
+  // addGeoRowSummary();
+}
+
+function collectGeoSummaryItems(){
+  const rows = [...geoTbodySummary.querySelectorAll('tr')];
+  const items = [];
+
+  for(const tr of rows){
+    const grade = tr.querySelector('.g')?.value;        // "150" | "200"
+    const w = parseFloat(tr.querySelector('.gw')?.value || 0);
+    const l = parseFloat(tr.querySelector('.gl')?.value || 0);
+    const q = Math.max(1, parseInt(tr.querySelector('.gq')?.value || 1, 10));
+    if(!(w>0 && l>0 && q>0)) continue;
+
+    const unit = (grade === '150') ? 25 : 30;
+    const kgPerSqm = (grade === '150') ? 0.15 : 0.20;
+
+    items.push({ grade, w, l, q, unit, kgPerSqm });
+  }
+
+  return items;
+}
     const addRow = () => { const tr = document.createElement('tr'); tr.innerHTML = `
         <td><select class="t">
           <option value="0.3L">LDPE 0.3</option>
+          <option value="0.3L_CANAL">คลองไส้ไก่ LDPE 0.3</option>
           <option value="0.5L">LDPE 0.5</option>
           <option value="0.5H">HDPE 0.5</option>
           <option value="0.75H">HDPE 0.75</option>
@@ -1373,7 +1524,6 @@ flatbarReset.classList.remove('hidden');
         <td><input class="w" type="number" step="0.01"></td>
         <td><input class="l" type="number" step="0.01"></td>
         <td><input class="d" type="number" step="0.01"></td>
-        <td><input type="checkbox" class="canal"></td>
         <td><input class="q" type="number" value="1" min="1"></td>
         <td><button type="button" class="btn-danger del">ลบ</button></td>`; tr.querySelector('.del').onclick = () => tr.remove(); tbody.appendChild(tr); };
     addRow(); document.getElementById('addItem').onclick = addRow;
@@ -1384,13 +1534,10 @@ flatbarReset.classList.remove('hidden');
       const useFactory = document.getElementById('summaryFactoryBlue').checked; 
       const useDiscount = document.getElementById('summaryDiscount5').checked;
       const PRICE = useFactory
-  ? { '0.3L':40, '0.5L':50, '0.5H':60, '0.75H':80, '1.0H':100 } // ✅ 1mm ราคาเต็ม
-  : { '0.3L':40, '0.5L':60, '0.5H':65, '0.75H':85, '1.0H':105 }; // ✅ 1mm ราคาเต็ม
+  ? { '0.3L':50, '0.5L':55, '0.5H':60, '0.75H':80, '1.0H':105 } // ✅ 1mm ราคาเต็ม
+  : { '0.3L':50, '0.5L':60, '0.5H':65, '0.75H':85, '1.0H':105 }; // ✅ 1mm ราคาเต็ม
       const MAT = c => c.endsWith('L')?'LDPE':'HDPE'; const THK = c => c.replace(/[LH]$/, ''); const fmt = n => Math.floor(n).toLocaleString();
-      const geo150 = document.getElementById('summaryGeo150').checked;
-      const geo200 = document.getElementById('summaryGeo200').checked;
-      const geoW = parseFloat(document.getElementById('summaryGeoWidth').value || 0);
-      const geoL = parseFloat(document.getElementById('summaryGeoLength').value || 0);
+     const geoItems = collectGeoSummaryItems();   // ✅ many rows
       const useDiscount10 = document.getElementById('summaryDiscount10').checked;
 
       let total=0, areaSum=0, weightKgSum=0, plasticKgSum=0, list='', idx=1;
@@ -1398,23 +1545,36 @@ flatbarReset.classList.remove('hidden');
 
       tbody.querySelectorAll('tr').forEach(tr=>{
 const code = tr.querySelector('.t').value;
+
+// ✅ แยก baseCode สำหรับ lookup ราคา (ตัด _CANAL ออก)
+const baseCode = code.split('_')[0];
+
 const w = parseFloat(tr.querySelector('.w').value||0);
 const l = parseFloat(tr.querySelector('.l').value||0);
 const d = parseFloat(tr.querySelector('.d').value||0);
 const q = parseInt(tr.querySelector('.q').value || 1, 10);
-const isCanal = tr.querySelector('.canal').checked;
-if(w<=0 || l<=0 || q<=0) return;
 
+// ✅ ถ้าเลือก option คลองไส้ไก่ ให้ถือว่าเป็นคลองทันท
+const isCanal = code.includes('_CANAL');
+
+if(w<=0 || l<=0 || q<=0) return;
 
 let aw=w, al=l;
 if(d>0){
-const pad=isCanal?1:2;
-aw=w+d*2+pad; al=l+d*2+pad;
+  const pad=isCanal?1:2;
+  aw=w+d*2+pad; al=l+d*2+pad;
 }
 
+// ✅ lookup ราคาด้วย baseCode
+let pricePer = PRICE[baseCode];
 
-let pricePer = PRICE[code];
-if (isCanal) pricePer = Math.floor(pricePer * 1.05);
+// ✅ เงื่อนไขพิเศษ: คลองไส้ไก่ LDPE 0.3 = 40 fix
+if (code === '0.3L_CANAL') {
+  pricePer = 40;
+} else {
+  // ✅ คลองรายการอื่น ยังใช้ +5% เหมือนเดิม
+  if (isCanal) pricePer = Math.floor(pricePer * 1.05);
+}
 if (summaryRoundCloth && summaryRoundCloth.checked) {
 pricePer += 10; // ผ้ากลม +10 บาท/ตร.ม.
 }
@@ -1433,7 +1593,7 @@ areaSum += area*q;
 
 
 list += `📍 รายการ ${idx}:\n`+
-`ผ้าพลาสติก ${MAT(code)} หนา ${THK(code)} มม. (${pricePer} บาท/ตร.ม.)\n`+
+`ผ้าพลาสติก ${MAT(baseCode)} หนา ${THK(baseCode)} มม. (${pricePer} บาท/ตร.ม.)\n`
 `ผ้าขนาด ${aw} × ${al} ม. = ${fmt(area)} ตร.ม.\n`+
 `ราคาผ้า ${fmt(cost)} บาท\n`;
 if(q>1) list += `จำนวน ${q} ผืน\n`;
@@ -1444,29 +1604,36 @@ idx++;
       let geoText = '';
       let geoArea = 0;
 
-      if(geo150 || geo200){
-        if((geo150 && geo200)) return alert('กรุณาเลือก Geotextile แค่ 1 เกรด (150g หรือ 200g)');
-        if(!(geoW>0 && geoL>0)) return alert('กรุณากรอกขนาด Geotextile กว้าง x ยาว');
+      if(geoItems.length){
+        const rollW = 2; // ม้วนหน้ากว้าง 2 เมตร
 
-        geoArea = geoW * geoL;
-        const geoKgPerSqm = geo150 ? 0.15 : 0.20;
-        weightKgSum += geoArea * geoKgPerSqm;
+        let geoIdx = 1;
+        for(const it of geoItems){
+          const areaOne = it.w * it.l;
+          const areaAll = areaOne * it.q;
+          geoArea += areaAll;
 
-        const unit = geo150 ? 25 : 30;
+          const cost = Math.floor(areaAll * it.unit);
+          geoTotal += cost;
 
-       // ส่งเป็นม้วนหน้ากว้าง 2 เมตร
-        const rollW = 2;
-        const rollL = Math.ceil(geoArea / rollW);
+          // น้ำหนักรวม
+          weightKgSum += areaAll * it.kgPerSqm;
 
+          // แปลงเป็น “ส่งเป็นม้วน 2xความยาว” ต่อ 1 รายการ (ต่อ 1 ผืน/ม้วน)
+          // ถ้าจำนวน q>1: ถือว่าเป็น q ม้วนแยกกัน ขนาดเท่ากัน
+          const rollL = Math.ceil(areaOne / rollW);
 
-        geoTotal = Math.floor(geoArea * unit);
+          geoText +=
+      `📍 รายการ Geotextile ${geoIdx}:
+      Geotextile ${it.grade}g (${it.unit} บาท/ตร.ม.)
+      ขนาดที่ต้องการ ${it.w}x${it.l} ม. = ${Math.floor(areaOne).toLocaleString()} ตร.ม.
+      จัดส่งเป็นม้วน 2x${rollL} ม.`;
 
-        geoText =
-      `📍 รายการ Geotextile:\n`+
-      `Geotextile ${geo150 ? '150g' : '200g'} (${unit} บาท/ตร.ม.)\n`+
-      `ขนาดที่ต้องการ ${geoW}x${geoL} ม. = ${Math.floor(geoArea).toLocaleString()} ตร.ม.\n`+
-      `จัดส่งเป็นม้วน 2x${rollL} ม.\n`+
-      `ราคา Geo ${Math.floor(geoTotal).toLocaleString()} บาท\n\n`;
+          if(it.q>1) geoText += `\nจำนวน ${it.q} ม้วน`;
+
+          geoText += `\nราคา Geo ${Math.floor(cost).toLocaleString()} บาท\n\n`;
+          geoIdx++;
+        }
       }
 
       // --- รวมยอดสินค้า (ผ้า + geo) ---
