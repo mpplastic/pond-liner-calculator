@@ -357,7 +357,7 @@ button{
       <label><input type="checkbox" id="pondRoundCloth" value="yes"> ผ้ากลม (+10 บาท/ตร.ม.)</label>
       
 
-      <div class="hint">เมื่อเลือกราคาโรงงาน: 0.3 = 40, 0.5 = 60, 0.75 = 80 บาท/ตร.ม.,HDPE 1.0 มม. = 100 บาท/ตร.ม.</div>
+      <div class="hint">เมื่อเลือกราคาโรงงาน: 0.3 = 50, 0.5 = 60, 0.75 = 80 บาท/ตร.ม.,HDPE 1.0 มม. = 100 บาท/ตร.ม.</div>
 
       <button type="submit" class="btn-primary">คำนวณ</button>
       <button type="button" id="pondReset" class="btn-warning hidden">คำนวณใหม่</button>
@@ -794,14 +794,12 @@ Object.keys(priceList).forEach(k => { priceList[k].price += 10; });
         let total = Math.floor(area * sel.price);
 
       
-      if (pondDiscount5 && pondDiscount5.checked) {
-        text += `(โปรรีวิว ลด 5%)\n`;
-      }
-
-
-        if (pondDiscount5 && pondDiscount5.checked) {
-        total = Math.floor(total * 0.95);
-      }
+     let discountAmt = 0;
+if (pondDiscount5 && pondDiscount5.checked) {
+  discountAmt = Math.floor(total * 0.05);
+  total = total - discountAmt;
+  text += `(โปรรีวิว ลด 5% = ${discountAmt.toLocaleString()} บาท)\n`;
+}
 
       // ค่าส่งตามน้ำหนัก
         const kg = area * thkToKgPerSqm(parseFloat(size.value));  // น้ำหนักรวม (กก.)
@@ -914,10 +912,11 @@ canalForm.onsubmit = function(e){
 
   let total = Math.floor(area * pricePerSqm);
 
-  // ส่วนลด 5% (เฉพาะค่าสินค้า)
-  if(canalDiscount5 && canalDiscount5.checked){
-    total = Math.floor(total * 0.95);
-  }
+let discountAmt = 0;
+if(canalDiscount5 && canalDiscount5.checked){
+  discountAmt = Math.floor(total * 0.05);
+  total = total - discountAmt;
+}
 
   // ค่าส่งตามน้ำหนัก (kg/ตร.ม. = ความหนา mm)
   const thk = parseFloat(size.value); // 0.3 หรือ 0.5
@@ -934,8 +933,8 @@ canalForm.onsubmit = function(e){
   text += `น้ำหนักประมาณ ${kg.toFixed(1)} กก.\n`;
 
   if(canalDiscount5 && canalDiscount5.checked){
-    text += `(โปรรีวิว ลด 5%)\n`;
-  }
+  text += `(โปรรีวิว ลด 5% = ${discountAmt.toLocaleString()} บาท)\n`;
+}
 
   text += `ราคาผ้า ${total.toLocaleString()} บาท\n`;
   if(shipping>0) text += `ค่าจัดส่ง ${shipping.toLocaleString()} บาท\n`;
@@ -1687,9 +1686,9 @@ if (geoText) out += `${geoText}\n`;
       if (discountAmount > 0) {
   if (useDiscount10 && itemsTotal > 0 && geoTotalSafe > 0) {
     out += `(ส่วนลด 10% (โปรรีวิวพลาสติก+geotextile) = ${fmt(discountAmount)} บาท)\n`;
-  } else if (useDiscount) {
-    out += `(ส่วนลดพิเศษ 5% = ${fmt(discountAmount)} บาท)\n`;
-  }
+} else if (useDiscount) {
+  out += `(โปรรีวิว ลด 5% = ${fmt(discountAmount)} บาท)\n`;
+}
 }
 
 
@@ -1716,3 +1715,4 @@ out += `\n(ผ้ากลม +10 บาท/ตร.ม.)`;
   </script>
 </body>
 </html>
+
