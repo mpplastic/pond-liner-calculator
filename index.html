@@ -394,23 +394,42 @@ button{
     <button id="canalCopy" class="copy-btn hidden">คัดลอกข้อความ</button>
   </div>
 
-  <!-- CIRCULAR -->
-  <div class="container hidden" id="circularContainer">
-    <form id="circularForm">
-      <label>เลือกเส้นผ่านศูนย์กลาง (เมตร):</label>
-      <div class="radio-group">
-        <label><input type="radio" name="circleDiameter" value="6" required> 6 เมตร</label>
-        <label><input type="radio" name="circleDiameter" value="8" required> 8 เมตร</label>
-        <label><input type="radio" name="circleDiameter" value="10" required> 10 เมตร</label>
-        <label><input type="radio" name="circleDiameter" value="12" required> 12 เมตร</label>
-      </div>
-      
-      <button type="submit" class="btn-primary">แสดงข้อมูล</button>
-      <button type="button" id="circularReset" class="btn-warning hidden">เริ่มใหม่</button>
-    </form>
-    <textarea id="circularResult" readonly placeholder="ผลลัพธ์จะแสดงที่นี่"></textarea>
-    <button id="circularCopy" class="copy-btn hidden">คัดลอกข้อความ</button>
-  </div>
+ <!-- CIRCULAR -->
+<div class="container hidden" id="circularContainer">
+  <form id="circularForm">
+    <label>ข้อมูลผู้รับ (ชื่อ-ที่อยู่-เบอร์โทร)</label>
+    <textarea id="circularCustInfo" placeholder="คัดลอกข้อมูลลูกค้ามาวางที่นี่"></textarea>
+
+    <h3 style="margin-top:0">รายการบ่อกลม (เพิ่มได้หลายรายการ)</h3>
+
+    <div class="table-wrap">
+      <table class="items-table" id="circularItemsTable">
+        <thead>
+          <tr>
+            <th>ความสูง</th>
+            <th>เส้นผ่านศูนย์กลาง</th>
+            <th>จำนวนบ่อ</th>
+            <th>ลบ</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <button type="button" id="addCircularItem" class="btn-secondary">+ เพิ่มรายการบ่อ</button>
+
+    <div class="hint">
+      ✅ ราคานี้รวม “ค่าจัดส่ง + ติดตั้ง” ทุกขนาด<br>
+      ✅ สั่งตั้งแต่ 2 บ่อขึ้นไป ลด 2,000 บาท/บ่อ (คิดจากจำนวนบ่อรวมทั้งออเดอร์)
+    </div>
+
+    <button type="submit" class="btn-primary" style="margin-top:12px">สรุปออเดอร์บ่อกลม</button>
+    <button type="button" id="circularReset" class="btn-warning hidden">เริ่มใหม่</button>
+  </form>
+
+  <textarea id="circularResult" readonly placeholder="ผลลัพธ์จะแสดงที่นี่"></textarea>
+  <button id="circularCopy" class="copy-btn hidden">คัดลอกข้อความ</button>
+</div>
 
   <!-- FLATBAR -->
   <div class="container hidden" id="flatbarContainer">
@@ -790,33 +809,41 @@ Object.keys(priceList).forEach(k => { priceList[k].price += 10; });
   }
         text += `\n\nสนใจความหนาไหนแจ้งได้เลยค่ะ 😊`;
       }else{
-        const sel = priceList[size.value];
-        let total = Math.floor(area * sel.price);
+       // === บ่อขุด: คิดยอดเต็มก่อน ===
+const sel = priceList[size.value];
+const fullTotal = Math.floor(area * sel.price);   // ✅ ยอดเต็มก่อนลด
 
-      
-     let discountAmt = 0;
+// === ส่วนลดโปรรีวิว 5% (แสดงทีหลัง) ===
+let discountAmt = 0;
+let netTotal = fullTotal;
+
 if (pondDiscount5 && pondDiscount5.checked) {
-  discountAmt = Math.floor(total * 0.05);
-  total = total - discountAmt;
-  text += `(โปรรีวิว ลด 5% = ${discountAmt.toLocaleString()} บาท)\n`;
+  discountAmt = Math.floor(fullTotal * 0.05);
+  netTotal = fullTotal - discountAmt;
 }
 
-      // ค่าส่งตามน้ำหนัก
-        const kg = area * thkToKgPerSqm(parseFloat(size.value));  // น้ำหนักรวม (กก.)
-        let shipping = calcShipPlasticByWeightKg(kg);
+// ค่าส่งตามน้ำหนัก
+const kg = area * thkToKgPerSqm(parseFloat(size.value));
+let shipping = calcShipPlasticByWeightKg(kg);
 
+// ✅ ยอดสุทธิรวมค่าส่ง
+const sum = Math.floor(netTotal + shipping);
 
-        const sum = Math.floor(total + shipping);
-
-        text += `📍 รายการ:\n`;
-        text += `ผ้าพลาสติก ${sel.material} หนา ${size.value} มม. (${sel.price} บาท/ตร.ม.)\n`;
-        text += `ขนาด ${ow} ม. × ${ol} ม.${d>0?` ลึก ${d} ม.`:''}\n`;
-        text += `ผ้าขนาด ${w} ม. × ${l} ม. = ${area.toLocaleString()} ตร.ม.\n(ขนาดผ้านี้ต้องวัดแนบพื้น และเผื่อขอบข้างละ 1 เมตรแล้ว)\n\n`;
-        if(shipping>0){ text += `ราคาผ้า ${total.toLocaleString()} บาท\nค่าจัดส่ง ${shipping.toLocaleString()} บาท\n`; }
-        text += `📌 สรุปยอดสั่งซื้อทั้งหมด: ${sum.toLocaleString()} บาท\n`;
-        text += `น้ำหนักประมาณ ${kg.toFixed(1)} กก.\n`;
-        if(pondRoundCloth.checked) {
-    text += `(ผ้ากลม +10 บาท/ตร.ม.)\n`;
+// ----- ตอนพิมพ์ข้อความ -----
+// (อย่าใช้ total เดิมแล้ว ให้ใช้ fullTotal / netTotal)
+text += `📍 รายการ:\n`;
+text += `ผ้าพลาสติก ${sel.material} หนา ${size.value} มม. (${sel.price} บาท/ตร.ม.)\n`;
+text += `ขนาด ${ow} ม. × ${ol} ม.${d>0?` ลึก ${d} ม.`:''}\n`;
+text += `ผ้าขนาด ${w} ม. × ${l} ม. = ${area.toLocaleString()} ตร.ม.\n(ขนาดผ้านี้ต้องวัดแนบพื้น และเผื่อขอบข้างละ 1 เมตรแล้ว)\n\n`;
+text += `ราคาผ้า ${fullTotal.toLocaleString()} บาท\n`;
+    if (discountAmt > 0) {
+      text += `โปรรีวิว ลด 5% = -${discountAmt.toLocaleString()} บาท\n`;
+      text += `ยอดหลังหักส่วนลด เหลือ ${netTotal.toLocaleString()} บาท\n`;
+    }
+    if (shipping > 0) text += `ค่าจัดส่ง ${shipping.toLocaleString()} บาท\n`;
+    text += `📌 สรุปยอดสั่งซื้อทั้งหมด: ${sum.toLocaleString()} บาท\n`;
+    text += `น้ำหนักประมาณ ${kg.toFixed(1)} กก.\n`;
+        if(pondRoundCloth.checked) {    text += `(ผ้ากลม +10 บาท/ตร.ม.)\n`;
   }
         if (pondFactoryBlue.checked) {
         text += `(ราคาโรงงาน เพจน้ำเงิน)\n`;
@@ -824,8 +851,8 @@ if (pondDiscount5 && pondDiscount5.checked) {
 
          text += `รบกวนลูกค้าตรวจสอบรายการให้ครบก่อนยืนยันนะคะ ✨\nหากเริ่มผลิตแล้ว จะไม่สามารถแก้ไขหรือยกเลิกได้ค่ะ\n\n`;
         if(shipping<=0) text += `(ส่งฟรี ชำระเงินเมื่อได้รับของค่ะ)`;
-        if(sum>=5000){ const dep=Math.floor(sum*0.1), bal=Math.floor(sum-dep); text += `\n✅ ชำระมัดจำ 10% (${dep.toLocaleString()} บาท) เพื่อยืนยันคำสั่งซื้อ\n\n📦 แจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์\n🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 6-10 วัน\nCOD ${bal.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`; }
-        else{ text += `ยืนยันการสั่งซื้อแล้วแจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์ค่ะ\n🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 6-10 วัน\nCOD ${sum.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`; }
+        if(sum>=5000){ const dep=Math.floor(sum*0.1), bal=Math.floor(sum-dep); text += `\n✅ ชำระมัดจำ 10% (${dep.toLocaleString()} บาท) เพื่อยืนยันคำสั่งซื้อ\n\n📦 แจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์\n🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 3-5 วัน\nCOD ${bal.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`; }
+        else{ text += `ยืนยันการสั่งซื้อแล้วแจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์ค่ะ\n🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 3-5 วันนะคะ\nCOD ${sum.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`; }
       }
       pondResult.value = text.trim(); pondCopy.classList.remove('hidden'); pondReset.classList.remove('hidden');
     };
@@ -910,19 +937,23 @@ canalForm.onsubmit = function(e){
     pricePerSqm = (canalFactoryBlue && canalFactoryBlue.checked) ? 50 : 60;
   }
 
-  let total = Math.floor(area * pricePerSqm);
+  // ✅ ยอดเต็มก่อนลด
+const fullTotal = Math.floor(area * pricePerSqm);
 
+// ✅ ส่วนลด 5% (โปรรีวิว)
 let discountAmt = 0;
-if(canalDiscount5 && canalDiscount5.checked){
-  discountAmt = Math.floor(total * 0.05);
-  total = total - discountAmt;
+let netTotal = fullTotal;
+
+if (canalDiscount5 && canalDiscount5.checked) {
+  discountAmt = Math.floor(fullTotal * 0.05);
+  netTotal = fullTotal - discountAmt;
 }
 
   // ค่าส่งตามน้ำหนัก (kg/ตร.ม. = ความหนา mm)
   const thk = parseFloat(size.value); // 0.3 หรือ 0.5
   const kg = area * thk;
   const shipping = calcShipPlasticByWeightKg(kg);
-  const sum = Math.floor(total + shipping);
+const sum = Math.floor(netTotal + shipping);
 
   const dep = sum >= 5000 ? Math.floor(sum * 0.1) : 0;
   const bal = sum - dep;
@@ -931,15 +962,14 @@ if(canalDiscount5 && canalDiscount5.checked){
   text += `ผ้าพลาสติก ${mat} หนา ${size.value} มม. (${pricePerSqm} บาท/ตร.ม.)\n`;
   text += `ขนาด ${w} ม. × ${l} ม. = ${area.toLocaleString()} ตร.ม.\n\n`;
   text += `น้ำหนักประมาณ ${kg.toFixed(1)} กก.\n`;
-
-  if(canalDiscount5 && canalDiscount5.checked){
-  text += `(โปรรีวิว ลด 5% = ${discountAmt.toLocaleString()} บาท)\n`;
+if (discountAmt > 0) {
+  text += `ยอดเต็ม (ก่อนส่วนลด) ${fullTotal.toLocaleString()} บาท\n`;
+  text += `โปรรีวิว ลด 5% = -${discountAmt.toLocaleString()} บาท\n`;
+  text += `ยอดหลังหักส่วนลด เหลือ ${netTotal.toLocaleString()} บาท\n`;
 }
-
-  text += `ราคาผ้า ${total.toLocaleString()} บาท\n`;
-  if(shipping>0) text += `ค่าจัดส่ง ${shipping.toLocaleString()} บาท\n`;
-  text += `📌 สรุปยอดสั่งซื้อทั้งหมด: ${sum.toLocaleString()} บาท\n`;
-
+else{text += `ราคาผ้า ${fullTotal.toLocaleString()} บาท\n`;}
+if(shipping>0) text += `ค่าจัดส่ง ${shipping.toLocaleString()} บาท\n`;
+text += `📌 สรุปยอดสั่งซื้อทั้งหมด: ${sum.toLocaleString()} บาท\n`;
   // แสดงราคาโรงงานเฉพาะกรณี 0.5 และติ๊ก factory blue
   if(size.value === '0.5' && canalFactoryBlue && canalFactoryBlue.checked){
     text += `(ราคาโรงงาน เพจน้ำเงิน)\n`;
@@ -953,7 +983,7 @@ if(canalDiscount5 && canalDiscount5.checked){
   }
 
   text += `📦 แจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์\n`;
-  text += `🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 6-10 วัน\n`;
+  text += `🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 3-5 วันนะคะ\n`;
   text += `COD ${bal.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`;
 
   canalResult.value = text.trim();
@@ -972,33 +1002,157 @@ canalReset.onclick = ()=>{
 if (blueWrap) blueWrap.classList.remove('hidden');
 if (canalFactoryBlue) canalFactoryBlue.disabled = false;
 };
-    // ---------- CIRCULAR LOGIC ----------
-    const circularForm = document.getElementById('circularForm');
-    const circularResult = document.getElementById('circularResult');
-    const circularCopy = document.getElementById('circularCopy');
-    const circularReset = document.getElementById('circularReset');
-    window.circularInfo = { '6':{volume:34000, price:35000}, '8':{volume:60000, price:50000}, '10':{volume:95000, price:63000}, '12':{volume:135000, price:72000} };
+  // ---------- CIRCULAR LOGIC (UPDATED: multi-items + cust + discount) ----------
+const circularForm = document.getElementById('circularForm');
+const circularResult = document.getElementById('circularResult');
+const circularCopy = document.getElementById('circularCopy');
+const circularReset = document.getElementById('circularReset');
 
-    circularForm.onsubmit = function(e){
-      e.preventDefault();
-      const dia = document.querySelector('input[name="circleDiameter"]:checked');
-      if(!dia){ alert('กรุณาเลือกขนาดบ่อกลม'); return; }
-      const data = window.circularInfo[dia.value];
-      let price = data.price;
+const circularTbody = document.querySelector('#circularItemsTable tbody');
+const addCircularItemBtn = document.getElementById('addCircularItem');
 
-      
+const fmt = n => Math.floor(n).toLocaleString();
 
-      let text = `📌 สรุปยอดสั่งซื้อทั้งหมด (บ่อกลม)\n`;
-      text += `บ่อกลม เมทัลชีทบลูสโคป สูง 1.2 ม. เส้นผ่านศูนย์กลาง ${dia.value} เมตร\n`;
-      text += `ความจุประมาณ ${data.volume.toLocaleString()} ลิตร\nราคา ${price.toLocaleString()} บาท\n`;
-      
+// ราคา/ความจุ ตามรูป (รวมส่ง+ติดตั้งทุกขนาด)
+const CIRCULAR = {
+  '0.8': {
+    '4':  { volume: 10000,  price: 16000 },
+    '5':  { volume: 15500,  price: 21000 },
+    '6':  { volume: 22000,  price: 26000 },
+    '8':  { volume: 40000,  price: 36000 },
+    '10': { volume: 62000,  price: 48000 },
+    '12': { volume: 90000,  price: 59000 },
+  },
+  '1.2': {
+    '4':  { volume: 15000,  price: 22000 },
+    '5':  { volume: 23500,  price: 30000 },
+    '6':  { volume: 34000,  price: 39000 },
+    '8':  { volume: 60000,  price: 50000 },
+    '10': { volume: 95000,  price: 63000 },
+    '12': { volume: 135000, price: 72000 },
+  }
+};
 
-      text += data.price>=80000?`\nสั่งเกิน 80,000 ส่งพร้อมติดตั้งฟรี!`:`\n(ค่าจัดส่งหรือติดตั้ง คิดเพิ่มตามระยะทาง)`;
-      text += `\n\nกรุณาตรวจสอบรายละเอียดสินค้าให้ครบถ้วนก่อนยืนยันการสั่งซื้อ`;
-      circularResult.value = text.trim(); circularCopy.classList.remove('hidden'); circularReset.classList.remove('hidden');
-    };
-    circularCopy.onclick = ()=>{ circularResult.select(); document.execCommand('copy'); alert('คัดลอกข้อความแล้ว'); };
-    circularReset.onclick = ()=>{ circularForm.reset(); circularResult.value=''; circularCopy.classList.add('hidden'); circularReset.classList.add('hidden'); };
+function addCircularRow(defaultH='0.8', defaultD='6', defaultQ=1){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>
+      <select class="ch">
+        <option value="0.8">สูง 0.8 ม.</option>
+        <option value="1.2">สูง 1.2 ม.</option>
+      </select>
+    </td>
+    <td>
+      <select class="cd">
+        <option value="4">4 ม.</option>
+        <option value="5">5 ม.</option>
+        <option value="6">6 ม.</option>
+        <option value="8">8 ม.</option>
+        <option value="10">10 ม.</option>
+        <option value="12">12 ม.</option>
+      </select>
+    </td>
+    <td><input class="cq" type="number" min="1" step="1" value="${defaultQ}"></td>
+    <td><button type="button" class="btn-danger cdel">ลบ</button></td>
+  `;
+  tr.querySelector('.ch').value = defaultH;
+  tr.querySelector('.cd').value = defaultD;
+  tr.querySelector('.cdel').onclick = ()=> tr.remove();
+  circularTbody.appendChild(tr);
+}
+
+// ค่าเริ่มต้น 1 แถว
+addCircularRow('0.8','6',1);
+addCircularItemBtn.onclick = ()=> addCircularRow('0.8','6',1);
+
+function collectCircularItems(){
+  const rows = [...circularTbody.querySelectorAll('tr')];
+  const items = [];
+  for(const tr of rows){
+    const h = tr.querySelector('.ch')?.value;
+    const d = tr.querySelector('.cd')?.value;
+    const q = Math.max(1, parseInt(tr.querySelector('.cq')?.value || 1, 10));
+    const data = CIRCULAR[h]?.[d];
+    if(!data) continue;
+    items.push({ h, d, q, volume: data.volume, unitPrice: data.price });
+  }
+  return items;
+}
+
+circularForm.onsubmit = function(e){
+  e.preventDefault();
+
+  const cust = (document.getElementById('circularCustInfo').value || '').trim();
+  const items = collectCircularItems();
+  if(!items.length){
+    alert('กรุณาเพิ่มรายการบ่ออย่างน้อย 1 รายการ');
+    return;
+  }
+
+  const totalQty = items.reduce((s,it)=> s + it.q, 0);
+
+  // 1) รายการ + รวมราคา (ก่อนส่วนลด)
+  let fullTotal = 0;
+  let listText = '';
+  let idx = 1;
+
+  for(const it of items){
+    const lineTotal = it.unitPrice * it.q;
+    fullTotal += lineTotal;
+
+    listText +=
+`📍 รายการ ${idx}:
+Hydropod บ่อกลม สูง ${it.h} ม. เส้นผ่านศูนย์กลาง ${it.d} ม.
+ความจุประมาณ ${fmt(it.volume)} ลิตร/บ่อ
+ราคา ${fmt(it.unitPrice)} บาท/บ่อ
+จำนวน ${it.q} บ่อ
+รวม ${fmt(lineTotal)} บาท
+
+`;
+    idx++;
+  }
+
+  // 2) ส่วนลด: 2 บ่อขึ้นไป ลด 2,000/บ่อ (นับจำนวนรวมทั้งออเดอร์)
+  let discount = 0;
+  if(totalQty >= 2){
+    discount = 2000 * totalQty;
+  }
+
+  const netTotal = Math.max(0, fullTotal - discount);
+
+  // 3) มัดจำ/ COD (เหมือนหน้าอื่นๆ)
+  const dep = netTotal >= 5000 ? Math.floor(netTotal * 0.1) : 0;
+  const cod = netTotal - dep;
+
+  // 4) สร้างข้อความ (ฟอร์แมตให้เหมือนหน้าอื่นๆ)
+  let out = cust ? `ส่ง\n${cust}\n\n` : '';
+  out += listText;
+
+  out += `✅ ราคานี้รวมค่าจัดส่งและติดตั้งแล้ว\n\n`;
+
+  out += `📌 สรุปยอดสั่งซื้อทั้งหมด\n`;
+  out += `ยอดเต็ม (ก่อนส่วนลด) ${fmt(fullTotal)} บาท\n`;
+  if(discount > 0){
+    out += `ส่วนลดซื้อ 2 บ่อขึ้นไป = ลด${fmt(discount)} บาท (ลด 2,000/บ่อ)\n`;
+  }
+  out += `ยอดรวม ${fmt(netTotal)} บาท\n\n`;
+
+  if(dep > 0){
+    out += `✅ ชำระมัดจำ 10% (${fmt(dep)} บาท)\n`;
+  }
+  out += `COD ${fmt(cod)} บาท\n\n`;
+
+  out += `โอนชำระเมื่อได้รับสินค้า\n`;
+  out += `ธนาคารกสิกรไทย\n`;
+  out += `ชื่อบัญชี: บริษัทมนูธรรมพลาสติก\n`;
+  out += `เลขที่:1888-5999-39\n\n`;
+
+  out += `🚚 สินค้าจะจัดส่งและติดตั้งภายใน 3-5 วัน`;
+
+  circularResult.value = out.trim();
+  circularCopy.classList.remove('hidden');
+  circularReset.classList.remove('hidden');
+};
 // ---------- GEOTEXTILE LOGIC ----------
 const geoForm = document.getElementById('geoForm');
 const geoResult = document.getElementById('geoResult');
@@ -1658,13 +1812,14 @@ if (useDiscount10 && itemsTotal > 0 && geoTotalSafe > 0) {
   discountAmount = Math.floor(itemsTotal * 0.05);
 }
 
-// --- subtotal หลังหักส่วนลด ---
 let subtotalItems = (itemsTotal + geoTotalSafe) - discountAmount;
 
-// --- ค่าส่ง ---
-// ✅ ค่าส่งรวม: ผ้า(kg) + Geo(sqm) แล้วค่อย apply min/max ครั้งเดียว
-let ship = calcShipCombined(plasticKgSum, geoArea);
+// ✅ ยอดเต็ม/ยอดหลังลด สำหรับโชว์ในสรุป
+const fullItems = (itemsTotal + geoTotalSafe);
+const netItems  = fullItems - discountAmount;
 
+// --- ค่าส่ง ---
+let ship = calcShipCombined(plasticKgSum, geoArea);
 const grand = Math.floor(subtotalItems + ship);
 const dep = grand >= 5000 ? Math.floor(grand * 0.1) : 0;
 const bal = grand - dep;
@@ -1674,26 +1829,19 @@ const bal = grand - dep;
 if (list) out += `${list}\n`;
 if (geoText) out += `${geoText}\n`;
       // ให้ “ค่าจัดส่ง/ส่งฟรี” มาก่อนสรุปยอด
-      out += `น้ำหนักรวมประมาณ ${weightKgSum.toFixed(1)} กก.\n`;
-
-      out += ship ? `ค่าจัดส่ง ${fmt(ship)} บาท\n\n` : `ส่งฟรี ชำระเงินเมื่อได้รับของค่ะ\n\n`;
-
-      // แล้วค่อย “สรุปยอด”
-      out += `📌 สรุปยอดสั่งซื้อทั้งหมด\nยอดรวม ${fmt(grand)} บาท\n`;
-
+    // ✅ โชว์ยอดเต็ม → ลด → เหลือ (ก่อนคิดค่าส่ง)
+if (discountAmount > 0) {
+  out += `ยอดเต็ม (ก่อนส่วนลด) ${fmt(fullItems)} บาท\n`;
+  out += `โปรรีวิว ลด ${useDiscount10 ? '10%' : '5%'} = -${fmt(discountAmount)} บาท\n`;
+  out += `ยอดหลังหักส่วนลด เหลือ ${fmt(netItems)} บาท\n`;
+}
+out += ship ? `ค่าจัดส่ง ${fmt(ship)} บาท\n` : `ส่งฟรี ชำระเงินเมื่อได้รับของค่ะ\n`;
+// ✅ ยอดรวมสุดท้าย (รวมค่าส่งแล้ว)
+out += `📌 สรุปยอดสั่งซื้อทั้งหมด\nยอดรวม ${fmt(grand)} บาท\n`;
+out += `น้ำหนักรวมประมาณ ${weightKgSum.toFixed(1)} กก.\n`;
       // หมายเหตุ/โปรต่างๆ วางต่อท้ายสรุปยอดได้เหมือนเดิม
       if (useFactory) out += `(ราคาโรงงาน เพจน้ำเงิน)\n`;
-      if (discountAmount > 0) {
-  if (useDiscount10 && itemsTotal > 0 && geoTotalSafe > 0) {
-    out += `(ส่วนลด 10% (โปรรีวิวพลาสติก+geotextile) = ${fmt(discountAmount)} บาท)\n`;
-} else if (useDiscount) {
-  out += `(โปรรีวิว ลด 5% = ${fmt(discountAmount)} บาท)\n`;
-}
-}
-
-
-
-      if(dep) out += `✅ ชำระมัดจำ 10% (${fmt(dep)} บาท)`; out += `\n COD ${fmt(bal)} บาท\n\n`; out += `🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 6-10 วัน`;
+      if(dep) out += `✅ ชำระมัดจำ 10% (${fmt(dep)} บาท)`; out += `\n COD ${fmt(bal)} บาท\n\n`; out += `🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 3-5 วันนะคะ`;
       const page = document.getElementById('pageSelect').value; const admin = document.getElementById('adminSelect').value; if(page) out += `\n\nเพจ: ${page}`; if(admin) out += `\nแอดมิน: ${admin}`;
       if (summaryRoundCloth && summaryRoundCloth.checked) {
 out += `\n(ผ้ากลม +10 บาท/ตร.ม.)`;
@@ -1715,4 +1863,3 @@ out += `\n(ผ้ากลม +10 บาท/ตร.ม.)`;
   </script>
 </body>
 </html>
-
