@@ -447,7 +447,17 @@
 
       <label>ความยาว (เมตร):</label>
       <input type="number" id="canalLength" step="0.01" placeholder="กรอกความยาว" required>
+      <label><input type="checkbox" id="canalFullRoll"> สั่งแบบยกม้วน</label>
 
+      <div id="canalRollWrap" class="hidden">
+        <label>จำนวนม้วน</label>
+        <input type="number" id="canalRollQty" step="1" min="1" value="1" placeholder="เช่น 1">
+        <div class="hint">
+          ยกม้วนราคา 22,000 บาท/ม้วน<br>
+          • LDPE 0.3 = 6 × 100 ม.<br>
+          • LDPE 0.5 = 4 × 100 ม.
+        </div>
+      </div>
       <label><input type="checkbox" id="canalDiscount5" value="yes"> ใช้ส่วนลดพิเศษ 5%</label>
 
       <button type="submit" class="btn-primary">คำนวณ</button>
@@ -533,10 +543,13 @@
       </div>
 
       <button type="button" id="flatbarAddCloth" class="btn-secondary" style="margin-bottom:8px">+ เพิ่มรายการผ้า</button>
-      <div class="hint">ค่าเริ่มต้นเป็น "ระบุเอง" (คิด 250 บาท/ตร.ม.) • ถ้าเลือกแบบสำเร็จ ระบบจะกรอกกว้าง×ยาวให้อัตโนมัติและคิดราคาตามชุดสำเร็จ</div>
+      <div class="hint">
+  ค่าเริ่มต้นเป็น "ระบุเอง" (คิด 250 บาท/ตร.ม.) • ถ้าเลือกแบบสำเร็จ ระบบจะกรอกกว้าง×ยาวให้อัตโนมัติและคิดราคาตามชุดสำเร็จ<br>
+  ค่าจัดส่งคิดแยกตามทุกรายการ โดยใช้ด้านที่สั้นที่สุดของผ้า × 150 บาท × จำนวน
+</div>
 
       <label><input type="checkbox" id="flatbarDiscount5"> ใช้ส่วนลดพิเศษ 5% (เฉพาะผ้า)</label>
-      <label><input type="checkbox" id="flatbarIsNim"> เคสขนส่งนิ่ม (ไม่รับนิ่ม/ไม่เข้าเงื่อนไขส่งฟรี)</label>
+    
 
       <hr style="opacity:.25; margin:16px 0">
 
@@ -826,8 +839,6 @@ canal: {
       max: 4000,
       plasticPerKg: 7,
       geoPerSqm: 5,
-      mpflowStd: 300,
-      mpflowNim: 500
     }
   };
 
@@ -843,8 +854,7 @@ function getSummaryPriceMap(){
   const SHIP_MAX = PRICE_MASTER.shipping.max;
   const SHIP_RATE_PER_KG = PRICE_MASTER.shipping.plasticPerKg;
   const GEO_SHIP_RATE_PER_SQM = PRICE_MASTER.shipping.geoPerSqm;
-  const MPFLOW_SHIP_STD = PRICE_MASTER.shipping.mpflowStd;
-  const MPFLOW_SHIP_NIM = PRICE_MASTER.shipping.mpflowNim;
+
 
   function clampShipping(x){
     if (x <= 0) return 0;
@@ -864,12 +874,34 @@ function getSummaryPriceMap(){
     return clampShipping(x);
   }
 
-  function calcShipMPFlow(itemsSubtotal, isNimNoAccept){
-    if(itemsSubtotal <= 0) return 0;
-    if(isNimNoAccept) return MPFLOW_SHIP_NIM;
-    if(itemsSubtotal >= 2000) return 0;
-    return MPFLOW_SHIP_STD;
+  function calcShipMPFlowByShortestSide(clothRows){
+  let totalShipping = 0;
+
+  for (const tr of clothRows) {
+    const type = tr.querySelector('.ptype')?.value;
+    const qty = Math.max(1, parseInt(tr.querySelector('.cq')?.value || 1, 10));
+
+    let w = 0;
+    let l = 0;
+
+    if (type !== 'custom') {
+      const s = PRESET_SIZES[type];
+      if (!s) continue;
+      w = Number(s.w);
+      l = Number(s.l);
+    } else {
+      w = parseFloat(tr.querySelector('.cw')?.value || 0);
+      l = parseFloat(tr.querySelector('.cl')?.value || 0);
+    }
+
+    if (!(w > 0 && l > 0) || !(qty > 0)) continue;
+
+    const shortestSide = Math.min(w, l);
+    totalShipping += shortestSide * 150 * qty;
   }
+
+  return totalShipping;
+}
 
   function thkToKgPerSqm(thk){
     const t = Number(thk);
@@ -1044,7 +1076,10 @@ function getSummaryPriceMap(){
   const canalReset = document.getElementById('canalReset');
   const canalSizeRadios = document.querySelectorAll('input[name="canalSize"]');
   const canalDiscount5 = document.getElementById('canalDiscount5');
- 
+ const canalFullRoll = document.getElementById('canalFullRoll');
+const canalRollWrap = document.getElementById('canalRollWrap');
+const canalRollQty = document.getElementById('canalRollQty');
+const CANAL_ROLL_PRICE = 22000;
 
   function applyCanalWidthLock(){
   const picked = document.querySelector('input[name="canalSize"]:checked');
@@ -1064,50 +1099,121 @@ function getSummaryPriceMap(){
     canalWidth.disabled = false;
   }
 }
+function applyCanalRollMode(){
+  const picked = document.querySelector('input[name="canalSize"]:checked');
+  const isFullRoll = canalFullRoll?.checked;
 
-  canalSizeRadios.forEach(r => r.addEventListener('change', applyCanalWidthLock));
+  if (!canalRollWrap) return;
+
+  if (isFullRoll) {
+    canalRollWrap.classList.remove('hidden');
+    canalLength.value = 100;
+    canalLength.disabled = true;
+
+    canalDiscount5.checked = false;
+    canalDiscount5.disabled = true;
+
+    if (picked?.value === '0.3') {
+      canalWidth.value = 6;
+      canalWidth.disabled = true;
+    } else if (picked?.value === '0.5') {
+      canalWidth.value = 4;
+      canalWidth.disabled = true;
+    }
+  } else {
+    canalRollWrap.classList.add('hidden');
+    canalLength.disabled = false;
+    canalDiscount5.disabled = false;
+    applyCanalWidthLock();
+  }
+}
+
+canalFullRoll.addEventListener('change', applyCanalRollMode);
+
+  canalSizeRadios.forEach(r => r.addEventListener('change', () => {
   applyCanalWidthLock();
+  applyCanalRollMode();
+}));
+applyCanalWidthLock();
+applyCanalRollMode();
 
   canalForm.onsubmit = function(e){
-    e.preventDefault();
+  e.preventDefault();
 
-    const size = document.querySelector('input[name="canalSize"]:checked');
-    let w = parseFloat(canalWidth.value);
-    let l = parseFloat(canalLength.value);
+  const size = document.querySelector('input[name="canalSize"]:checked');
+  let w = parseFloat(canalWidth.value);
+  let l = parseFloat(canalLength.value);
+  const isFullRoll = canalFullRoll?.checked;
+  const rollQty = Math.max(1, parseInt(canalRollQty?.value || 1, 10));
 
-    if(!size || !(w>0) || !(l>0)){
-      alert('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
-      return;
+  if(!size || !(w>0) || !(l>0)){
+    alert('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+    return;
+  }
+
+  const mat = 'LDPE';
+  let text = '';
+  let fullTotal = 0;
+  let netTotal = 0;
+  let discountAmt = 0;
+  let kg = 0;
+  let shipping = 0;
+  let sum = 0;
+
+  if (isFullRoll) {
+    // ล็อกขนาดตามชนิด
+    if (size.value === '0.3') {
+      w = 6;
+      l = 100;
+    } else {
+      w = 4;
+      l = 100;
     }
 
-    const mat = 'LDPE';
+    const areaPerRoll = w * l;
+    const totalArea = areaPerRoll * rollQty;
+
+    fullTotal = CANAL_ROLL_PRICE * rollQty;
+    netTotal = fullTotal;
+
+    const thk = parseFloat(size.value);
+    kg = totalArea * thk;
+    shipping = calcShipPlasticByWeightKg(kg);
+    sum = Math.floor(netTotal + shipping);
+
+    text += `📍 รายการ:\n`;
+    text += `ผ้าพลาสติก ${mat} หนา ${size.value} มม. แบบยกม้วน\n`;
+    text += `ขนาดต่อม้วน ${w} ม. × ${l} ม.\n`;
+    text += `จำนวน ${rollQty} ม้วน\n\n`;
+    text += `น้ำหนักประมาณ ${kg.toFixed(1)} กก.\n`;
+    text += `ราคาม้วนละ ${CANAL_ROLL_PRICE.toLocaleString()} บาท\n`;
+    text += `ราคารวมผ้า ${fullTotal.toLocaleString()} บาท\n`;
+    if(shipping>0) text += `ค่าจัดส่ง ${shipping.toLocaleString()} บาท\n`;
+    text += `📌 สรุปยอดสั่งซื้อทั้งหมด: ${sum.toLocaleString()} บาท\n`;
+  } else {
     const area = w * l;
 
     let pricePerSqm = 0;
-if(size.value === '0.3'){
-  pricePerSqm = PRICE_MASTER.canal['0.3'];
-}else{
-  pricePerSqm = PRICE_MASTER.canal['0.5'];
-}
+    if(size.value === '0.3'){
+      pricePerSqm = PRICE_MASTER.canal['0.3'];
+    }else{
+      pricePerSqm = PRICE_MASTER.canal['0.5'];
+    }
 
-const fullTotal = Math.floor(area * pricePerSqm);
+    fullTotal = Math.floor(area * pricePerSqm);
+    netTotal = fullTotal;
 
-    let discountAmt = 0;
-    let netTotal = fullTotal;
     if (canalDiscount5 && canalDiscount5.checked) {
       discountAmt = Math.floor(fullTotal * 0.05);
       netTotal = fullTotal - discountAmt;
     }
 
     const thk = parseFloat(size.value);
-    const kg = area * thk;
-    const shipping = calcShipPlasticByWeightKg(kg);
-    const sum = Math.floor(netTotal + shipping);
+    kg = area * thk;
+    shipping = calcShipPlasticByWeightKg(kg);
+    sum = Math.floor(netTotal + shipping);
 
-    const dep = sum >= 5000 ? Math.floor(sum * 0.1) : 0;
-    const bal = sum - dep;
-
-    let text = `📍 รายการ:\n`;
+    text += `📍 รายการ:\n`;
     text += `ผ้าพลาสติก ${mat} หนา ${size.value} มม. (${pricePerSqm} บาท/ตร.ม.)\n`;
     text += `ขนาด ${w} ม. × ${l} ม. = ${area.toLocaleString()} ตร.ม.\n\n`;
     text += `น้ำหนักประมาณ ${kg.toFixed(1)} กก.\n`;
@@ -1122,35 +1228,41 @@ const fullTotal = Math.floor(area * pricePerSqm);
 
     if(shipping>0) text += `ค่าจัดส่ง ${shipping.toLocaleString()} บาท\n`;
     text += `📌 สรุปยอดสั่งซื้อทั้งหมด: ${sum.toLocaleString()} บาท\n`;
+  }
 
+  const dep = sum >= 5000 ? Math.floor(sum * 0.1) : 0;
+  const bal = sum - dep;
 
+  text += `\nรบกวนลูกค้าตรวจสอบรายการให้ครบก่อนยืนยันนะคะ ✨\n`;
+  text += `หากเริ่มผลิตแล้ว จะไม่สามารถแก้ไขหรือยกเลิกได้ค่ะ\n\n`;
 
-    text += `\nรบกวนลูกค้าตรวจสอบรายการให้ครบก่อนยืนยันนะคะ ✨\n`;
-    text += `หากเริ่มผลิตแล้ว จะไม่สามารถแก้ไขหรือยกเลิกได้ค่ะ\n\n`;
+  if(dep>0){
+    text += `✅ ชำระมัดจำ 10% (${dep.toLocaleString()} บาท) เพื่อยืนยันคำสั่งซื้อ\n\n`;
+  }
 
-    if(dep>0){
-      text += `✅ ชำระมัดจำ 10% (${dep.toLocaleString()} บาท) เพื่อยืนยันคำสั่งซื้อ\n\n`;
-    }
+  text += `📦 แจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์\n`;
+  text += `🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 3-5 วันนะคะ\n`;
+  text += `COD ${bal.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`;
 
-    text += `📦 แจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์\n`;
-    text += `🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 3-5 วันนะคะ\n`;
-    text += `COD ${bal.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`;
-
-    canalResult.value = text.trim();
-    canalCopy.classList.remove('hidden');
-    canalReset.classList.remove('hidden');
-  };
-
+  canalResult.value = text.trim();
+  canalCopy.classList.remove('hidden');
+  canalReset.classList.remove('hidden');
+};
   canalCopy.onclick = ()=> copyText(canalResult.value || '');
   canalReset.onclick = ()=>{
   canalForm.reset();
   canalWidth.disabled = false;
-  canalResult.value='';
+  canalLength.disabled = false;
+  canalResult.value = '';
   canalCopy.classList.add('hidden');
   canalReset.classList.add('hidden');
-  applyCanalWidthLock();
-};
 
+  if (canalRollWrap) canalRollWrap.classList.add('hidden');
+  if (canalRollQty) canalRollQty.value = 1;
+
+  applyCanalWidthLock();
+  applyCanalRollMode();
+};
   // CIRCULAR
   const circularForm = document.getElementById('circularForm');
   const circularResult = document.getElementById('circularResult');
@@ -1734,8 +1846,8 @@ ${unitText}`;
 
     const steelSum = kit ? kit.totalPrice : 0;
     let subtotal = clothSum + steelSum;
-    const isNimCase = document.getElementById('flatbarIsNim')?.checked || false;
-    const ship = calcShipMPFlow(subtotal, isNimCase);
+    const clothRows = [...clothTableBody.querySelectorAll('tr')];    
+    const ship = calcShipMPFlowByShortestSide(clothRows);
     const grand = subtotal + ship;
 
     let dep = 0;
@@ -1746,18 +1858,7 @@ ${unitText}`;
       out += `\n\n(ส่วนลดค่าสินค้าผ้า = ${discAmt.toLocaleString()} บาท • ส่วนลดพิเศษ 5%)`;
     }
 
-    if(ship === 0){
-      out += `\nส่งฟรี`;
-    }else{
-      out += `\nค่าจัดส่ง ${ship.toLocaleString()} บาท`;
-    }
-
-    if(!isNimCase && subtotal >= 2000){
-      out += `\n(ส่งฟรีเมื่อยอดสินค้า 2,000 บาทขึ้นไป)`;
-    }
-    if(isNimCase){
-      out += `\n*หมายเหตุ: เคสขนส่งนิ่ม (ไม่เข้าเงื่อนไขส่งฟรี / โปรดตรวจสอบก่อนส่ง)`;
-    }
+  out += `\nค่าจัดส่ง ${ship.toLocaleString()} บาท`;
 
     const hasKit = steelSum > 0;
     const totalLabel = hasKit ? 'MP Flow + อุปกรณ์ติดตั้ง' : 'MP Flow';
