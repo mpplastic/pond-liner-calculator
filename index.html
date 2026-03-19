@@ -545,7 +545,8 @@
       <button type="button" id="flatbarAddCloth" class="btn-secondary" style="margin-bottom:8px">+ เพิ่มรายการผ้า</button>
       <div class="hint">
   ค่าเริ่มต้นเป็น "ระบุเอง" (คิด 250 บาท/ตร.ม.) • ถ้าเลือกแบบสำเร็จ ระบบจะกรอกกว้าง×ยาวให้อัตโนมัติและคิดราคาตามชุดสำเร็จ<br>
-  ค่าจัดส่งคิดแยกตามทุกรายการ โดยใช้ด้านที่สั้นที่สุดของผ้า × 150 บาท × จำนวน
+  ค่าจัดส่งคิดตามด้านที่สั้นที่สุดของผ้า × 150 บาท × จำนวน<br>
+✅ หากสั่งผ้าปูรถรวม 2 ผืนขึ้นไป ส่งฟรี
 </div>
 
       <label><input type="checkbox" id="flatbarDiscount5"> ใช้ส่วนลดพิเศษ 5% (เฉพาะผ้า)</label>
@@ -876,6 +877,15 @@ function getSummaryPriceMap(){
 
   function calcShipMPFlowByShortestSide(clothRows){
   let totalShipping = 0;
+  let totalQty = 0;
+
+  for (const tr of clothRows) {
+    const qty = Math.max(1, parseInt(tr.querySelector('.cq')?.value || 1, 10));
+    totalQty += qty;
+  }
+
+  // ส่งฟรีเมื่อสั่งผ้าปูรถรวม 2 ผืนขึ้นไป
+  if (totalQty >= 2) return 0;
 
   for (const tr of clothRows) {
     const type = tr.querySelector('.ptype')?.value;
@@ -1855,14 +1865,18 @@ ${unitText}`;
     const cod = grand - dep;
 
     if (discAmt > 0) {
-      out += `\n\n(ส่วนลดค่าสินค้าผ้า = ${discAmt.toLocaleString()} บาท • ส่วนลดพิเศษ 5%)`;
-    }
+  out += `\n\n(ส่วนลดค่าสินค้าผ้า = ${discAmt.toLocaleString()} บาท • ส่วนลดพิเศษ 5%)`;
+}
 
+if (ship > 0) {
   out += `\nค่าจัดส่ง ${ship.toLocaleString()} บาท`;
+} else {
+  out += `\nค่าจัดส่ง ฟรี`;
+}
 
-    const hasKit = steelSum > 0;
-    const totalLabel = hasKit ? 'MP Flow + อุปกรณ์ติดตั้ง' : 'MP Flow';
-    out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLocaleString()} บาท`;
+const hasKit = steelSum > 0;
+const totalLabel = hasKit ? 'MP Flow + อุปกรณ์ติดตั้ง' : 'MP Flow';
+out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLocaleString()} บาท`;
 
     out += `\n\nโอนชำระเมื่อได้รับสินค้า
 ธนาคารกสิกรไทย
@@ -2161,9 +2175,9 @@ Geotextile ${it.grade}g (${it.unit} บาท/ตร.ม.)
       discountAmount = Math.floor((itemsTotal + geoTotalSafe) * 0.10);
     } else if (useDiscount10 && itemsTotal > 0 && geoTotalSafe > 0) {
       adminNotes.push(`โปรรีวิว 10% + Geo ใช้ไม่ได้ เพราะ Geo คิดเป็น ${(geoCoverageRatio * 100).toFixed(1)}% ของพื้นที่ผ้า`);
-    } else if (useDiscount) {
-      discountAmount = Math.floor(itemsTotal * 0.05);
-    }
+   } else if (useDiscount) {
+  discountAmount = Math.floor((itemsTotal + geoTotalSafe) * 0.05);
+}
 
     let subtotalItems = (itemsTotal + geoTotalSafe) - discountAmount;
     const fullItems = (itemsTotal + geoTotalSafe);
