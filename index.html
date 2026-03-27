@@ -1057,7 +1057,10 @@ function getSummaryPriceMap(){
       for(const s of sizes){
         const sel = priceList[s.value];
         const p = Math.floor(area * sel.price);
-        text += `✅ ${sel.material} หนา ${s.value} มม. – ${p.toLocaleString()} บาท (${sel.price} บาท/ตร.ม.)\n`;
+        const kg = area * thkToKgPerSqm(parseFloat(s.value));
+        const ship = calcShipPlasticByWeightKg(kg);
+        const total = p + ship;
+        text += `✅ ${sel.material} หนา ${s.value} มม. – ราคาผ้า ${p.toLocaleString()} บาท + ค่าส่ง ${ship.toLocaleString()} บาท = รวม ${total.toLocaleString()} บาท\n`;
       }
       text += `\nขนาดผ้าที่คำนวณได้ประมาณ ${w} × ${l} ม. = ${area.toLocaleString()} ตร.ม.\n`;
       text += `(ขนาดผ้านี้ต้องวัดแนบพื้น และเผื่อขอบข้างละ 1 เมตรแล้ว)\n`;
