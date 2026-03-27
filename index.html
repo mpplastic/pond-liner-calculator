@@ -403,13 +403,12 @@
   <!-- POND -->
   <div class="container" id="pondContainer">
     <form id="pondForm">
-      <label>เลือกความหนา (มม.):</label>
+      <label>เลือกความหนา (มม.) — เลือกได้หลายตัวเพื่อเปรียบเทียบราคา:</label>
       <div class="radio-group">
-        <label><input type="radio" name="size" value="0.3" required> 0.3 มม.</label>
-        <label><input type="radio" name="size" value="0.5" required> 0.5 มม.</label>
-        <label><input type="radio" name="size" value="0.75" required> 0.75 มม.</label>
-        <label><input type="radio" name="size" value="1.0" required> 1.0 มม.</label>
-        <label><input type="radio" name="size" value="all" required> ไม่ระบุความหนา</label>
+        <label><input type="checkbox" name="size" value="0.3"> 0.3 มม.</label>
+        <label><input type="checkbox" name="size" value="0.5"> 0.5 มม.</label>
+        <label><input type="checkbox" name="size" value="0.75"> 0.75 มม.</label>
+        <label><input type="checkbox" name="size" value="1.0"> 1.0 มม.</label>
       </div>
 
       <label>ความกว้าง (เมตร):</label>
@@ -429,8 +428,44 @@
       <button type="button" id="pondReset" class="btn-warning hidden">คำนวณใหม่</button>
     </form>
 
-    <textarea id="pondResult" readonly placeholder="ผลลัพธ์จะแสดงที่นี่"></textarea>
-    <button id="pondCopy" class="copy-btn hidden" type="button">คัดลอกข้อความ</button>
+    <div class="result-card-wrap" id="pondResultWrap" style="display:none;">
+      <div class="result-card">
+        <div class="result-card-head">
+          <div>
+            <div class="result-badge">บ่อขุด</div>
+            <div class="result-title">ผลการคำนวณ</div>
+          </div>
+        </div>
+
+        <div class="result-grid" id="pondPriceGrid">
+          <div class="result-box">
+            <div class="result-box-label">ราคาผ้า</div>
+            <div class="result-box-value" id="pondCardProduct">–</div>
+          </div>
+          <div class="result-box">
+            <div class="result-box-label">ค่าส่ง</div>
+            <div class="result-box-value" id="pondCardShip">–</div>
+          </div>
+          <div class="result-box">
+            <div class="result-box-label">มัดจำ 10%</div>
+            <div class="result-box-value" id="pondCardDeposit">–</div>
+          </div>
+          <div class="result-box highlight">
+            <div class="result-box-label">ยอดสุทธิ</div>
+            <div class="result-box-value" id="pondCardTotal">–</div>
+          </div>
+        </div>
+
+        <div class="result-section">
+          <div class="result-section-title">ข้อความสรุป</div>
+          <textarea id="pondResult" readonly style="min-height:340px" placeholder="ผลลัพธ์จะแสดงที่นี่"></textarea>
+        </div>
+
+        <div class="copy-actions" style="grid-template-columns:1fr;">
+          <button type="button" class="copy-btn" id="pondCopy">คัดลอกข้อความ</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- CANAL -->
@@ -497,7 +532,7 @@
 <input type="number" id="circularDistance" step="1" min="1" placeholder="เช่น 180" required>
 
 <div class="hint">
-  ✅ เลือกได้ 2 แบบ: LDPE 0.5 (ไม่จับจีบ) หรือ HDPE 0.75 (จับจีบ)<br>
+  ✅ เลือกได้ 2 แบบ: LDPE 0.5 (จับจีบ) หรือ HDPE 0.75 (จับจีบ)<br>
   ✅ เงื่อนไขค่าจัดส่งบ่อกลม<br>
   • ฟรีจัดส่งไม่เกิน 200 กม. จากโรงงาน<br>
   • 201–400 กม. = 3,500 บาท<br>
@@ -976,16 +1011,29 @@ function getSummaryPriceMap(){
   const pondLength = document.getElementById('pondLength');
   const pondDepth = document.getElementById('pondDepth');
   const pondResult = document.getElementById('pondResult');
+  const pondResultWrap = document.getElementById('pondResultWrap');
   const pondCopy = document.getElementById('pondCopy');
   const pondReset = document.getElementById('pondReset');
   const pondDiscount5 = document.getElementById('pondDiscount5');
   const pondRoundCloth = document.getElementById('pondRoundCloth');
+  const pondCardProduct = document.getElementById('pondCardProduct');
+  const pondCardShip = document.getElementById('pondCardShip');
+  const pondCardDeposit = document.getElementById('pondCardDeposit');
+  const pondCardTotal = document.getElementById('pondCardTotal');
+  const pondPriceGrid = document.getElementById('pondPriceGrid');
+
+  function setPondCards(product, ship, deposit, total){
+    pondCardProduct.textContent = product;
+    pondCardShip.textContent = ship;
+    pondCardDeposit.textContent = deposit;
+    pondCardTotal.textContent = total;
+  }
 
   pondForm.onsubmit = function(e){
     e.preventDefault();
-    const size = document.querySelector('input[name="size"]:checked');
+    const sizes = [...document.querySelectorAll('input[name="size"]:checked')];
     let w = parseFloat(pondWidth.value), l = parseFloat(pondLength.value), d = parseFloat(pondDepth.value || 0);
-    if(!size || w<=0 || l<=0){ alert('กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง'); return; }
+    if(!sizes.length || w<=0 || l<=0){ alert('กรุณาเลือกความหนาอย่างน้อย 1 ค่า และกรอกข้อมูลให้ครบถ้วน'); return; }
 
     if (d > 4) {
       alert('ความลึกเกิน 4 เมตร กรุณาให้แอดมินถามย้ำลูกค้าก่อนค่ะ');
@@ -1002,29 +1050,24 @@ function getSummaryPriceMap(){
     const area = w*l;
     let text='';
 
-    if(size.value==='all'){
-      const p03  = Math.floor(area * priceList['0.3'].price);
-      const p05  = Math.floor(area * priceList['0.5'].price);
-      const p075 = Math.floor(area * priceList['0.75'].price);
-      const p10  = Math.floor(area * priceList['1.0'].price);
+    if(sizes.length > 1){
+      // เปรียบเทียบหลายความหนา
       const rec = getRecommendedThicknessByClothWidth(w);
-
       text += `จากขนาดที่ลูกค้าแจ้งมา ราคาดังนี้ค่ะ\n`;
-      text += `✅ LDPE หนา 0.3 มม. – ${p03.toLocaleString()} บาท (${priceList['0.3'].price} บาท/ตร.ม.)\n`;
-      text += `✅ HDPE หนา 0.5 มม. – ${p05.toLocaleString()} บาท (${priceList['0.5'].price} บาท/ตร.ม.)\n`;
-      text += `✅ HDPE หนา 0.75 มม. – ${p075.toLocaleString()} บาท (${priceList['0.75'].price} บาท/ตร.ม.)\n`;
-      text += `✅ HDPE หนา 1.0 มม. – ${p10.toLocaleString()} บาท (${priceList['1.0'].price} บาท/ตร.ม.)\n\n`;
-      text += `ขนาดผ้าที่คำนวณได้ประมาณ ${w} × ${l} ม. = ${area.toLocaleString()} ตร.ม.\n`;
+      for(const s of sizes){
+        const sel = priceList[s.value];
+        const p = Math.floor(area * sel.price);
+        text += `✅ ${sel.material} หนา ${s.value} มม. – ${p.toLocaleString()} บาท (${sel.price} บาท/ตร.ม.)\n`;
+      }
+      text += `\nขนาดผ้าที่คำนวณได้ประมาณ ${w} × ${l} ม. = ${area.toLocaleString()} ตร.ม.\n`;
+      text += `(ขนาดผ้านี้ต้องวัดแนบพื้น และเผื่อขอบข้างละ 1 เมตรแล้ว)\n`;
       text += `📌 จากขนาดที่แจ้งมาจะแนะนำเป็นขนาด ${rec.label} ค่ะ\n`;
-      text += `- ถ้าด้านกว้างผ้าไม่เกิน 10 ม. แนะนำ 0.3 มม.\n`;
-      text += `- ถ้าไม่เกิน 20 ม. แนะนำ HDPE 0.5 มม.\n`;
-      text += `- ถ้าไม่เกิน 35 ม. แนะนำ 0.75 มม.\n`;
-      text += `- ถ้าเกิน 35 ม. ขึ้นไป แนะนำ 1.0 มม.\n\n`;
-      text += `หากบ่อมีหิน หรือพื้นขรุขระ แนะนำให้เสริม Geotextile รองพื้นด้วยนะคะ เพื่อช่วยลดการเสียดสีและยืดอายุการใช้งานของผ้าค่ะ`;
-      if (d > 4) text += `\n\n⚠️ หมายเหตุภายใน: ความลึกเกิน 4 เมตร ควรถามย้ำลูกค้าอีกครั้ง`;
+      if (d > 4) text += `\n⚠️ หมายเหตุภายใน: ความลึกเกิน 4 เมตร ควรถามย้ำลูกค้าอีกครั้ง`;
       if (pondRoundCloth.checked) { text += `\n(ผ้ากลม +10 บาท/ตร.ม.)`; }
       text += `\n\nสนใจให้ทางเราแนะนำความหนาที่เหมาะกับหน้างานเพิ่มเติม แจ้งลักษณะพื้นที่ได้เลยค่ะ 😊`;
+      pondPriceGrid.style.display = 'none';
     }else{
+      const size = sizes[0];
       const sel = priceList[size.value];
       const fullTotal = Math.floor(area * sel.price);
 
@@ -1038,6 +1081,15 @@ function getSummaryPriceMap(){
       const kg = area * thkToKgPerSqm(parseFloat(size.value));
       let shipping = calcShipPlasticByWeightKg(kg);
       const sum = Math.floor(netTotal + shipping);
+      const dep = sum >= 5000 ? Math.floor(sum * 0.1) : sum;
+
+      setPondCards(
+        `${netTotal.toLocaleString()} บาท`,
+        `${shipping.toLocaleString()} บาท`,
+        `${dep.toLocaleString()} บาท`,
+        `${sum.toLocaleString()} บาท`
+      );
+      pondPriceGrid.style.display = '';
 
       text += `📍 รายการ:\n`;
       text += `ผ้าพลาสติก ${sel.material} หนา ${size.value} มม. (${sel.price} บาท/ตร.ม.)\n`;
@@ -1053,11 +1105,10 @@ function getSummaryPriceMap(){
       text += `น้ำหนักประมาณ ${kg.toFixed(1)} กก.\n`;
       if (d > 4) text += `⚠️ หมายเหตุภายใน: ความลึกเกิน 4 เมตร ควรถามย้ำลูกค้าอีกครั้ง\n`;
       if(pondRoundCloth.checked) text += `(ผ้ากลม +10 บาท/ตร.ม.)\n`;
-    
 
       text += `รบกวนลูกค้าตรวจสอบรายการให้ครบก่อนยืนยันนะคะ ✨\nหากเริ่มผลิตแล้ว จะไม่สามารถแก้ไขหรือยกเลิกได้ค่ะ\n\n`;
       if(sum>=5000){
-        const dep=Math.floor(sum*0.1), bal=Math.floor(sum-dep);
+        const bal=Math.floor(sum-dep);
         text += `✅ ชำระมัดจำ 10% (${dep.toLocaleString()} บาท) เพื่อยืนยันคำสั่งซื้อ\n\n📦 แจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์\n🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 3-5 วัน\nCOD ${bal.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`;
       }else{
         text += `ยืนยันการสั่งซื้อแล้วแจ้งชื่อ-ที่อยู่ & เบอร์โทรศัพท์ค่ะ\n🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 3-5 วันนะคะ\nCOD ${sum.toLocaleString()} บาท โอนเมื่อได้รับของค่ะ 😉\n`;
@@ -1065,15 +1116,16 @@ function getSummaryPriceMap(){
     }
 
     pondResult.value = text.trim();
-    pondCopy.classList.remove('hidden');
+    pondResultWrap.style.display = '';
     pondReset.classList.remove('hidden');
+    pondResultWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   pondCopy.onclick = ()=> copyText(pondResult.value || '');
   pondReset.onclick = ()=>{
     pondForm.reset();
     pondResult.value='';
-    pondCopy.classList.add('hidden');
+    pondResultWrap.style.display = 'none';
     pondReset.classList.add('hidden');
   };
 
@@ -1283,8 +1335,8 @@ applyCanalRollMode();
 
   const CIRCULAR = {
   ldpe05: {
-    label: 'LDPE 0.5 (ไม่จับจีบ)',
-    materialText: 'LDPE 0.5 แบบไม่จับจีบ',
+    label: 'LDPE 0.5 (จับจีบ)',
+    materialText: 'LDPE 0.5 แบบจับจีบ',
     '0.8': {
       '4':  { volume: 10000,  price: 12500 },
       '5':  { volume: 15500,  price: 16500 },
@@ -1329,7 +1381,7 @@ applyCanalRollMode();
   tr.innerHTML = `
     <td>
       <select class="cm">
-        <option value="ldpe05">LDPE 0.5 (ไม่จับจีบ)</option>
+        <option value="ldpe05">LDPE 0.5 (จับจีบ)</option>
         <option value="hdpe075">HDPE 0.75 (จับจีบ)</option>
       </select>
     </td>
@@ -1439,16 +1491,12 @@ circularForm.onsubmit = function(e){
     fullTotal += lineTotal;
 
     const mmText = it.mat === 'ldpe05' ? 'LDPE 0.5 มม.' : 'HDPE 0.75 มม.';
-    const styleText = it.mat === 'ldpe05' ? 'แบบไม่จับจีบ' : 'แบบนำไปจับจีบ';
 
     listText +=
-`HydroPod บ่อกลม ${mmText}
-${styleText}
+`บ่อกลม HydroPod ผ้า ${mmText}
 สูง ${it.h} ม. เส้นผ่านศูนย์กลาง ${it.d} ม.
-ความจุประมาณ ${fmt(it.volume)} ลิตร / บ่อ
-
-ราคา ${fmt(it.unitPrice)} บาท
-จำนวน ${it.q} บ่อ
+ความจุประมาณ ${fmt(it.volume)} ลิตร
+ราคา ${fmt(it.unitPrice)} บาท จำนวน ${it.q} บ่อ
 
 `;
   }
@@ -1460,7 +1508,7 @@ ${styleText}
   const shipping = shipInfo.shipping;
   const isActualShipping = distanceKm > 800;
 
-  let out = `📍 รายการสั่งซื้อ\n\n`;
+  let out = `📍 รายการสั่งซื้อ\n`;
 
   if(cust){
     out += `${cust}\n\n`;
@@ -1494,7 +1542,7 @@ if(discount > 0){
     out += `ยอดรวม ${fmt(grandTotal)} บาท\n\n`;
 
     out += `✅ ชำระมัดจำ 20% = ${fmt(deposit)} บาท\n`;
-    out += `✅ ยอดคงเหลือ COD = ${fmt(cod)} บาท\n\n`;
+    out += `✅ ยอดคงเหลือ ${fmt(cod)} บาท ชำระเมื่อติดตั้งเสร็จ\n\n`;
 
     out += `ช่องทางชำระเงินมัดจำ\n`;
     out += `ธนาคารกสิกรไทย\n`;
