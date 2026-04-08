@@ -585,6 +585,7 @@
 </div>
 
       <label><input type="checkbox" id="flatbarDiscount5"> ใช้ส่วนลดพิเศษ 5% (เฉพาะผ้า)</label>
+      <label><input type="checkbox" id="flatbarReview10"> โปรรีวิว ลด 10% (ซื้อผ้า + ชุดติดตั้ง)</label>
     
 
       <hr style="opacity:.25; margin:16px 0">
@@ -1771,7 +1772,6 @@ circularReset.onclick = ()=>{
   }
 
   addFlatbarRowBtn.addEventListener('click', ()=> makeFlatbarRow());
-  makeFlatbarRow();
 
   function collectFlatbarItems(){
     const rows = [...flatbarItemsBody.querySelectorAll('tr')];
@@ -1896,18 +1896,26 @@ ${unitText}`;
     if(kit && kit.text){ out += `\n\n${kit.text}`; }
 
     const applyDisc = document.getElementById('flatbarDiscount5').checked;
+    const applyReview = document.getElementById('flatbarReview10').checked;
     const clothBase = cloth.price;
+    const steelSum = kit ? kit.totalPrice : 0;
+    const hasKit = steelSum > 0;
+
     let discAmt = 0;
     let clothSum = clothBase;
+    let steelAfterDisc = steelSum;
 
-    if (applyDisc) {
+    if (applyReview && hasKit) {
+      discAmt = Math.floor((clothBase + steelSum) * 0.10);
+      clothSum = Math.floor(clothBase * 0.90);
+      steelAfterDisc = Math.floor(steelSum * 0.90);
+    } else if (applyDisc) {
       discAmt = Math.floor(clothBase * 0.05);
       clothSum = clothBase - discAmt;
     }
 
-    const steelSum = kit ? kit.totalPrice : 0;
-    let subtotal = clothSum + steelSum;
-    const clothRows = [...clothTableBody.querySelectorAll('tr')];    
+    let subtotal = clothSum + steelAfterDisc;
+    const clothRows = [...clothTableBody.querySelectorAll('tr')];
     const ship = calcShipMPFlowByShortestSide(clothRows);
     const grand = subtotal + ship;
 
@@ -1915,9 +1923,11 @@ ${unitText}`;
     if(grand>=5000){ dep = Math.floor(grand*0.1); }
     const cod = grand - dep;
 
-    if (discAmt > 0) {
-  out += `\n\n(ส่วนลดค่าสินค้าผ้า = ${discAmt.toLocaleString()} บาท • ส่วนลดพิเศษ 5%)`;
-}
+    if (applyReview && hasKit && discAmt > 0) {
+      out += `\n\nส่วนลดโปรรีวิว (${discAmt.toLocaleString()} บาท • 10%)`;
+    } else if (discAmt > 0) {
+      out += `\n\nส่วนลดโปรรีวิว (${discAmt.toLocaleString()} บาท • 5%)`;
+    }
 
 if (ship > 0) {
   out += `\nค่าจัดส่ง ${ship.toLocaleString()} บาท`;
@@ -1925,7 +1935,6 @@ if (ship > 0) {
   out += `\nค่าจัดส่ง ฟรี`;
 }
 
-const hasKit = steelSum > 0;
 const totalLabel = hasKit ? 'MP Flow + อุปกรณ์ติดตั้ง' : 'MP Flow';
 out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLocaleString()} บาท`;
 
@@ -1948,7 +1957,6 @@ out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLo
     clothTableBody.innerHTML='';
     makeClothRow('custom');
     flatbarItemsBody.innerHTML='';
-    makeFlatbarRow();
     flatbarResult.value='';
     flatbarCopy.classList.add('hidden');
     flatbarReset.classList.add('hidden');
