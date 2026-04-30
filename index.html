@@ -4,401 +4,646 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>คำนวณค่า ผ้าปูบ่อ • คลองไส้ไก่ • บ่อกลม • MP Flow • สรุปออเดอร์</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root{
-      --mp-black:#0b1220;
-      --mp-dark:#111827;
-      --mp-gray:#6b7280;
-      --mp-light:#f6f7fb;
-      --mp-blue:#2563eb;
-      --mp-blue-2:#60a5fa;
-      --mp-green:#22c55e;
-      --mp-red:#ef4444;
-      --mp-yellow:#facc15;
-      --shadow:0 10px 30px rgba(2,6,23,.10);
-      --radius:16px;
-      --clr-primary: var(--mp-blue);
-      --clr-primary-dark:#1d4ed8;
-      --clr-secondary: var(--mp-blue-2);
-      --clr-danger: var(--mp-red);
-      --clr-warning: var(--mp-yellow);
-      --clr-bg: var(--mp-light);
-      --clr-card: #ffffff;
-      --clr-muted: var(--mp-gray);
+      --blue:#1e40af;
+      --blue-mid:#2563eb;
+      --blue-light:#60a5fa;
+      --cyan:#0ea5e9;
+      --teal:#0d9488;
+      --green:#16a34a;
+      --red:#dc2626;
+      --yellow:#d97706;
+      --dark:#0f172a;
+      --dark2:#1e293b;
+      --muted:#64748b;
+      --bg:#f0f4ff;
+      --card:#ffffff;
+      --radius:18px;
+      --shadow-sm:0 2px 8px rgba(15,23,42,.07);
+      --shadow:0 8px 32px rgba(15,23,42,.10);
+      --shadow-lg:0 20px 60px rgba(15,23,42,.14);
     }
 
-    *{box-sizing:border-box;font-family:'Segoe UI', Tahoma, Arial, sans-serif}
+    *{ box-sizing:border-box; margin:0; padding:0; }
     body{
-      margin:0;
-      background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(37,99,235,.10), transparent 55%),
-        radial-gradient(900px 500px at 90% 10%, rgba(96,165,250,.12), transparent 55%),
-        var(--clr-bg);
-      color:#0f172a;
+      font-family:'Sarabun','Segoe UI',sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 900px 500px at 0% 0%, rgba(37,99,235,.13) 0%, transparent 60%),
+        radial-gradient(ellipse 700px 400px at 100% 100%, rgba(14,165,233,.10) 0%, transparent 60%);
+      background-attachment: fixed;
+      color: var(--dark);
+      min-height:100vh;
     }
 
-    h1{
-      text-align:center;
-      margin:22px 0 14px;
-      font-size:22px;
+    /* ── HEADER ── */
+    .site-header{
+      background: linear-gradient(135deg, var(--dark) 0%, #1e3a8a 60%, #1e40af 100%);
+      padding: 20px 20px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .site-header::before{
+      content:'';
+      position:absolute; inset:0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .site-header-inner{
+      max-width:1100px;
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      gap:14px;
+      position:relative;
+    }
+    .site-logo{
+      width:48px; height:48px;
+      background: linear-gradient(135deg,#60a5fa,#2563eb);
+      border-radius:14px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:22px; font-weight:900; color:#fff;
+      box-shadow: 0 4px 16px rgba(37,99,235,.4);
+      flex-shrink:0;
+    }
+    .site-title{
+      color:#fff;
+      font-size:20px;
       font-weight:800;
-      letter-spacing:-.2px;
+      line-height:1.2;
     }
-    h1:after{
-      content:"";
-      display:block;
-      width:88px;
-      height:4px;
-      margin:10px auto 0;
-      border-radius:999px;
-      background: linear-gradient(90deg, var(--mp-blue), var(--mp-blue-2));
-      opacity:.9;
+    .site-subtitle{
+      color: rgba(255,255,255,.6);
+      font-size:13px;
+      font-weight:500;
+      margin-top:2px;
     }
 
+    /* ── TABS ── */
+    .tabs-wrap{
+      background: linear-gradient(135deg, var(--dark) 0%, #1e3a8a 60%, #1e40af 100%);
+      padding: 16px 20px 0;
+      position:sticky;
+      top:0;
+      z-index:100;
+      box-shadow: 0 4px 20px rgba(15,23,42,.25);
+    }
     .tabs{
       display:flex;
-      justify-content:center;
-      gap:10px;
-      flex-wrap:wrap;
-      margin:0 0 14px;
-      padding:0 12px;
+      gap:4px;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      scrollbar-width:none;
+      max-width:1100px;
+      margin:0 auto;
+      padding-bottom:1px;
     }
+    .tabs::-webkit-scrollbar{ display:none; }
     .tab{
-      padding:10px 14px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      padding:10px 18px;
       cursor:pointer;
-      background: rgba(255,255,255,.75);
-      backdrop-filter: blur(10px);
-      border-radius:999px;
-      border:1px solid rgba(15,23,42,.08);
-      transition:.22s;
-      font-weight:800;
-      color:#0f172a;
-      box-shadow: 0 6px 18px rgba(2,6,23,.06);
+      border-radius:12px 12px 0 0;
+      border:none;
+      font-weight:700;
+      font-size:14px;
+      color:rgba(255,255,255,.65);
+      background:transparent;
+      white-space:nowrap;
+      transition:all .22s cubic-bezier(.4,0,.2,1);
+      position:relative;
+      font-family:'Sarabun',sans-serif;
     }
-    .tab:hover{ transform: translateY(-1px); }
+    .tab .tab-icon{ font-size:16px; }
+    .tab:hover{
+      color:rgba(255,255,255,.9);
+      background:rgba(255,255,255,.08);
+    }
     .tab.active{
-      background: linear-gradient(135deg, var(--mp-blue), var(--mp-blue-2));
-      color:#fff;
-      border-color: transparent;
+      background: var(--bg);
+      color: var(--blue-mid);
+      font-weight:800;
+      box-shadow: 0 -2px 0 var(--blue-mid) inset;
     }
 
+    /* ── CONTAINER ── */
+    .page-wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:28px 20px 60px;
+    }
     .container{
-      max-width: 1040px;
-      margin: 0 auto 26px;
-      padding: 20px;
-      background: rgba(255,255,255,.85);
-      backdrop-filter: blur(10px);
+      background: var(--card);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       border: 1px solid rgba(15,23,42,.06);
+      padding: 28px 28px 32px;
+      animation: fadeUp .35s ease both;
+    }
+    @keyframes fadeUp{
+      from{ opacity:0; transform:translateY(14px); }
+      to{ opacity:1; transform:translateY(0); }
     }
 
-    label{ display:block; margin-bottom:8px; font-weight:800; color:#0f172a; }
-    .radio-group{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
-    .radio-group label{ font-weight:700; color:#111827; }
+    /* ── SECTION TITLE ── */
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:22px;
+      padding-bottom:14px;
+      border-bottom:2px solid var(--bg);
+    }
+    .section-icon{
+      width:38px; height:38px;
+      border-radius:10px;
+      background: linear-gradient(135deg,var(--blue-mid),var(--cyan));
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px;
+      flex-shrink:0;
+      box-shadow: 0 4px 12px rgba(37,99,235,.25);
+    }
+    .section-label{ font-size:20px; font-weight:800; color:var(--dark); }
+    .section-sub{ font-size:13px; color:var(--muted); margin-top:2px; }
 
+    /* ── LABEL ── */
+    label{
+      display:block;
+      margin-bottom:7px;
+      font-weight:700;
+      font-size:14px;
+      color:#334155;
+      letter-spacing:.01em;
+    }
+    .radio-group{
+      display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px;
+    }
+    .radio-group label{
+      display:flex; align-items:center; gap:8px;
+      background:#f8fafc;
+      border:1.5px solid rgba(15,23,42,.09);
+      border-radius:10px;
+      padding:8px 14px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:14px;
+      color:#334155;
+      transition:all .18s;
+    }
+    .radio-group label:hover{
+      border-color:var(--blue-light);
+      background:#eff6ff;
+    }
+    .radio-group input:checked + *,
+    .radio-group label:has(input:checked){
+      border-color:var(--blue-mid);
+      background:#eff6ff;
+      color:var(--blue-mid);
+    }
+
+    /* ── CHECKBOX TOGGLE ── */
+    .toggle-group{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:18px;
+    }
+    .toggle-group label,
+    label:has(input[type="checkbox"]){
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:#f8fafc;
+      border:1.5px solid rgba(15,23,42,.09);
+      border-radius:10px;
+      padding:9px 16px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:13.5px;
+      color:#334155;
+      transition:all .18s;
+      margin-bottom:10px;
+    }
+    label:has(input[type="checkbox"]):hover{
+      border-color:var(--blue-light);
+      background:#eff6ff;
+    }
+    label:has(input[type="checkbox"]:checked){
+      border-color:var(--blue-mid);
+      background:linear-gradient(135deg,#eff6ff,#dbeafe);
+      color:var(--blue-mid);
+    }
+
+    /* ── INPUTS ── */
     input[type="number"], input[type="text"], select, textarea{
       width:100%;
-      padding:14px 16px;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius:14px;
+      padding:13px 16px;
+      border:1.5px solid #e2e8f0;
+      border-radius:12px;
       margin-bottom:16px;
-      font-size:16px;
-      line-height:1.4;
-      min-height:46px;
+      font-size:15px;
+      font-family:'Sarabun',sans-serif;
+      line-height:1.5;
       background:#fff;
-      transition:border-color .2s ease, box-shadow .2s ease;
-      color:#0f172a;
+      color:var(--dark);
+      transition:border-color .2s, box-shadow .2s, background .2s;
+      box-shadow: var(--shadow-sm);
     }
     input[type="number"]:focus, input[type="text"]:focus, select:focus, textarea:focus{
       outline:none;
+      border-color:var(--blue-mid);
+      box-shadow:0 0 0 4px rgba(37,99,235,.12);
+      background:#fff;
+    }
+    input[type="number"]:hover, input[type="text"]:hover, select:hover{
       border-color:#93c5fd;
-      box-shadow:0 0 0 3px rgba(147,197,253,.35);
     }
-
     textarea{
-      resize:none;
+      resize:vertical;
+      min-height:120px;
       background:#f8fafc;
-      min-height:140px;
+      font-size:14px;
+      line-height:1.7;
     }
 
+    /* ── BUTTONS ── */
     button{
       border:none;
-      border-radius:14px;
-      padding:12px 18px;
+      border-radius:12px;
+      padding:13px 22px;
       font-size:15px;
-      font-weight:600;
+      font-weight:700;
+      font-family:'Sarabun',sans-serif;
       cursor:pointer;
-      transition:.25s;
-      margin-top: 10px;
-      margin-bottom: 20px;
+      transition:all .22s cubic-bezier(.4,0,.2,1);
+      margin-top:8px;
+      margin-bottom:16px;
+      letter-spacing:.01em;
     }
     .btn-primary{
-      background: linear-gradient(135deg, var(--mp-blue), var(--mp-blue-2));
+      background: linear-gradient(135deg, var(--blue-mid) 0%, var(--cyan) 100%);
       color:#fff;
-      box-shadow: 0 10px 20px rgba(37,99,235,.18);
+      box-shadow: 0 6px 20px rgba(37,99,235,.3);
+      width:100%;
+      padding:15px;
+      font-size:16px;
     }
-    .btn-primary:hover{ filter:brightness(.98); transform: translateY(-1px); }
-    .btn-secondary{ background:#0f172a; color:#fff; }
-    .btn-secondary:hover{ filter:brightness(1.05); }
-    .btn-warning{ background:#fde047; color:#111827; }
-    .btn-danger{ background:#ef4444; color:#fff; }
+    .btn-primary:hover{
+      transform:translateY(-2px);
+      box-shadow:0 10px 28px rgba(37,99,235,.35);
+      filter:brightness(1.05);
+    }
+    .btn-primary:active{ transform:translateY(0); }
+    .btn-secondary{
+      background: linear-gradient(135deg,var(--dark),var(--dark2));
+      color:#fff;
+      box-shadow: 0 4px 12px rgba(15,23,42,.2);
+    }
+    .btn-secondary:hover{ transform:translateY(-1px); filter:brightness(1.1); }
+    .btn-warning{
+      background:linear-gradient(135deg,#fbbf24,#f59e0b);
+      color:var(--dark);
+      box-shadow:0 4px 12px rgba(245,158,11,.25);
+    }
+    .btn-warning:hover{ transform:translateY(-1px); }
+    .btn-danger{
+      background:linear-gradient(135deg,#ef4444,#dc2626);
+      color:#fff;
+      padding:8px 14px;
+      font-size:13px;
+      margin:0;
+      box-shadow:0 2px 8px rgba(220,38,38,.2);
+    }
+    .btn-danger:hover{ filter:brightness(1.1); }
 
     .copy-btn{
       display:inline-flex;
       align-items:center;
       justify-content:center;
       gap:8px;
-      padding:10px 16px;
-      border-radius:14px;
-      background: #0f172a;
+      padding:11px 16px;
+      border-radius:12px;
+      background:linear-gradient(135deg,var(--dark),var(--dark2));
       color:#fff;
       font-weight:700;
-      box-shadow: 0 10px 20px rgba(2,6,23,.14);
+      font-family:'Sarabun',sans-serif;
+      font-size:14px;
+      border:none;
+      cursor:pointer;
+      box-shadow:0 4px 14px rgba(15,23,42,.18);
+      transition:all .2s;
+      margin:0;
     }
-    .copy-btn:hover{ filter:brightness(1.05); }
+    .copy-btn:hover{ transform:translateY(-1px); filter:brightness(1.15); }
 
     .hidden{ display:none !important; }
 
+    /* ── TABLE ── */
+    .table-wrap{
+      width:100%;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      border-radius:14px;
+      border:1.5px solid #e2e8f0;
+      margin-bottom:16px;
+      box-shadow:var(--shadow-sm);
+    }
     .items-table{
       width:100%;
       border-collapse:collapse;
-      margin-bottom:14px;
-      border:1px solid rgba(15,23,42,.10);
-      border-radius:16px;
-      overflow:hidden;
+      min-width:640px;
     }
     .items-table thead{
-      background: linear-gradient(135deg, #0f172a, #1f2a44);
+      background:linear-gradient(135deg,var(--dark),#1e3a8a);
+    }
+    .items-table th{
+      padding:13px 12px;
+      text-align:center;
       color:#fff;
+      font-weight:700;
+      font-size:13px;
+      letter-spacing:.02em;
+      white-space:nowrap;
     }
-    .items-table th, .items-table td{
-      padding:10px;
+    .items-table td{
+      padding:10px 10px;
       text-align:center;
+      border-bottom:1px solid #f1f5f9;
     }
-    .items-table tbody tr:nth-child(odd){ background:#f8fafc; }
-    .items-table th:first-child, .items-table td:first-child{ min-width: 180px; }
-    .items-table input[type="number"], .items-table select{
-      color:#111827 !important;
-      -webkit-text-fill-color:#111827;
-      background:#fff;
-      width:100%;
-      height:52px;
-      font-size:18px;
-      padding:10px 12px;
-      text-align:center;
-      margin-bottom:0;
-    }
-    .items-table input::placeholder{ color:#9ca3af; }
-
+    .items-table tbody tr{ background:#fff; transition:background .15s; }
+    .items-table tbody tr:hover{ background:#f8fafc; }
+    .items-table tbody tr:last-child td{ border-bottom:none; }
+    .items-table th:first-child, .items-table td:first-child{ min-width:190px; }
     .items-table td:nth-child(2),
     .items-table td:nth-child(3),
-    .items-table td:nth-child(4),
-    .items-table td:nth-child(6){ min-width:120px; }
+    .items-table td:nth-child(4){ min-width:110px; }
+    .items-table input[type="number"],
+    .items-table select{
+      background:#f8fafc;
+      border:1.5px solid #e2e8f0;
+      border-radius:9px;
+      width:100%;
+      height:44px;
+      font-size:15px;
+      padding:8px 10px;
+      text-align:center;
+      margin-bottom:0;
+      box-shadow:none;
+      color:var(--dark);
+      font-family:'Sarabun',sans-serif;
+    }
+    .items-table input[type="number"]:focus,
+    .items-table select:focus{
+      border-color:var(--blue-mid);
+      box-shadow:0 0 0 3px rgba(37,99,235,.1);
+      background:#fff;
+    }
+    .items-table input::placeholder{ color:#94a3b8; }
 
+    /* ── HINT ── */
     .hint{
+      background:linear-gradient(135deg,rgba(37,99,235,.05),rgba(14,165,233,.05));
+      border:1.5px dashed rgba(37,99,235,.2);
+      border-radius:12px;
+      padding:12px 16px;
+      margin:10px 0 16px;
       color:#475569;
       font-size:13px;
-      background: rgba(37,99,235,.06);
-      border:1px dashed rgba(37,99,235,.25);
-      padding:10px 12px;
+      line-height:1.7;
+    }
+
+    /* ── DIVIDER ── */
+    hr{ border:none; border-top:2px solid var(--bg); margin:20px 0; }
+
+    /* ── GRID ── */
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+    /* ── PRICE CARDS (single) ── */
+    .price-preview{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin:16px 0;
+    }
+    .price-card{
+      background:linear-gradient(135deg,#f8fafc,#f1f5f9);
+      border:1.5px solid #e2e8f0;
       border-radius:14px;
-      margin:8px 0 10px;
-      line-height:1.55;
-      word-break:break-word;
+      padding:16px;
+      text-align:center;
+      transition:all .2s;
+    }
+    .price-card:hover{ border-color:var(--blue-light); box-shadow:var(--shadow-sm); }
+    .price-card-label{ font-size:12px; color:var(--muted); font-weight:700; margin-bottom:6px; }
+    .price-card-value{ font-size:22px; font-weight:900; color:var(--dark); }
+    .price-card.highlight{
+      background:linear-gradient(135deg,#eff6ff,#dbeafe);
+      border-color:var(--blue-mid);
+    }
+    .price-card.highlight .price-card-value{ color:var(--blue-mid); }
+
+    /* ── RESULT TEXTAREA ── */
+    #pondResult, #canalResult, #circularResult, #flatbarResult, #geoResult{
+      background:#f8fafc;
+      border:1.5px solid #e2e8f0;
+      border-radius:14px;
+      font-size:14px;
+      line-height:1.8;
+      min-height:200px;
+      padding:16px;
+      color:var(--dark);
+      margin-top:16px;
+      box-shadow: var(--shadow-sm);
     }
 
-    .row{display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
-
-    .summary-head{
-      background: linear-gradient(135deg, rgba(37,99,235,.08), rgba(96,165,250,.08));
-      border: 1px solid rgba(101,145,238,.18);
-      margin-top: 20px;
-      margin-bottom: 20px;
-      padding: 20px 24px;
-      border-radius:16px;
-    }
-    .summary-head .badge{
-      display:inline-block;
-      font-weight:900;
-      font-size:12px;
-      letter-spacing:.6px;
-      padding:6px 10px;
-      border-radius:999px;
-      background:#0f172a;
-      color:#fff;
-    }
-    .summary-head .title{
-      margin-top:8px;
-      font-weight:900;
-      font-size:18px;
-      color:#0f172a;
-    }
-    .summary-head .sub{
-      margin-top:4px;
-      font-size:13px;
-      color:#334155;
-    }
-
-    .table-wrap{
-      width: 100%;
-      overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-      border-radius: 16px;
-      border: 1px solid rgba(15,23,42,.10);
-      touch-action: pan-x;
-    }
-    .table-wrap .items-table{
-      border: 0;
-      border-radius: 0;
-      overflow: visible;
-      min-width: 720px;
-      margin-bottom:0;
-    }
-
-    #geoItemsTableSummary thead{
-      background: linear-gradient(135deg, #0ea5e9, #22c55e);
-      color:#fff;
-    }
-    #geoItemsTableSummary thead th{ color:#fff; }
-    #geoItemsTableSummary{
-      border: 1px solid rgba(34,197,94,.25);
-    }
-    #geoItemsTableSummary tbody tr:nth-child(odd){
-      background: rgba(34,197,94,.06);
-    }
-
-    .result-card-wrap{
-      margin-top:18px;
-    }
+    /* ── RESULT CARD (สรุปออเดอร์) ── */
+    .result-card-wrap{ margin-top:20px; }
     .result-card{
       background:#fff;
-      border:1px solid rgba(15,23,42,.08);
-      border-radius:20px;
-      padding:18px;
-      box-shadow:0 20px 50px rgba(2,6,23,.08);
+      border:1.5px solid #e2e8f0;
+      border-radius:var(--radius);
+      padding:24px;
+      box-shadow:var(--shadow-lg);
+      animation:fadeUp .3s ease both;
     }
     .result-card-head{
       display:flex;
       justify-content:space-between;
-      align-items:center;
-      margin-bottom:14px;
+      align-items:flex-start;
+      margin-bottom:20px;
+      padding-bottom:16px;
+      border-bottom:2px solid var(--bg);
     }
     .result-badge{
       display:inline-block;
-      padding:6px 10px;
+      padding:5px 12px;
       border-radius:999px;
-      background:#0f172a;
+      background:linear-gradient(135deg,var(--dark),#1e3a8a);
       color:#fff;
-      font-size:12px;
-      font-weight:900;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.08em;
     }
     .result-title{
-      font-size:20px;
+      font-size:22px;
       font-weight:900;
-      color:#0f172a;
+      color:var(--dark);
       margin-top:8px;
     }
     .result-grid{
       display:grid;
       grid-template-columns:repeat(4,1fr);
       gap:12px;
-      margin-bottom:18px;
+      margin-bottom:20px;
     }
     .result-box{
       background:#f8fafc;
-      border:1px solid rgba(15,23,42,.06);
-      border-radius:16px;
-      padding:14px;
+      border:1.5px solid #e2e8f0;
+      border-radius:14px;
+      padding:16px;
+      transition:all .2s;
     }
+    .result-box:hover{ border-color:#93c5fd; }
     .result-box.highlight{
-      background:linear-gradient(135deg, rgba(37,99,235,.10), rgba(96,165,250,.15));
-      border-color:rgba(37,99,235,.18);
+      background:linear-gradient(135deg,#eff6ff,#dbeafe);
+      border-color:var(--blue-mid);
     }
     .result-box-label{
-      font-size:12px;
-      color:#64748b;
-      font-weight:700;
-      margin-bottom:6px;
+      font-size:11px;
+      color:var(--muted);
+      font-weight:800;
+      margin-bottom:8px;
+      text-transform:uppercase;
+      letter-spacing:.06em;
     }
     .result-box-value{
-      font-size:22px;
+      font-size:20px;
       font-weight:900;
-      color:#0f172a;
+      color:var(--dark);
     }
+    .result-box.highlight .result-box-value{ color:var(--blue-mid); }
 
     .admin-alert{
       display:none;
-      margin-bottom:16px;
-      padding:14px 16px;
-      border-radius:16px;
-      border:1px solid rgba(250,204,21,.45);
-      background: linear-gradient(135deg, rgba(250,204,21,.12), rgba(245,158,11,.08));
-      color:#78350f;
+      margin-bottom:18px;
+      padding:14px 18px;
+      border-radius:14px;
+      border:1.5px solid rgba(217,119,6,.3);
+      background:linear-gradient(135deg,rgba(254,243,199,.8),rgba(253,230,138,.4));
+      color:#92400e;
       font-size:14px;
-      line-height:1.55;
-      font-weight:700;
+      line-height:1.65;
+      font-weight:600;
     }
-    .admin-alert.show{
-      display:block;
-    }
+    .admin-alert.show{ display:block; }
 
+    .result-section{ margin-top:16px; }
     .result-section-title{
-      font-size:15px;
-      font-weight:900;
+      font-size:14px;
+      font-weight:800;
       margin-bottom:8px;
-      color:#0f172a;
+      color:var(--dark);
+      text-transform:uppercase;
+      letter-spacing:.05em;
     }
     .copy-actions{
       display:grid;
       grid-template-columns:repeat(4,1fr);
       gap:10px;
-      margin-top:14px;
+      margin-top:16px;
     }
 
-    @media (max-width:800px){
-      .result-grid,
-      .copy-actions{
-        grid-template-columns:repeat(2,1fr);
-      }
+    /* ── GEO TABLE ── */
+    #geoItemsTableSummary thead{
+      background:linear-gradient(135deg,#0ea5e9,#16a34a);
     }
+    #geoItemsTableSummary{
+      border-color:rgba(34,197,94,.2);
+    }
+    #geoItemsTableSummary tbody tr:nth-child(odd){ background:rgba(34,197,94,.04); }
 
-    @media (max-width:600px){
-      h1{ font-size:18px; }
-      .container{ padding:14px; }
-      .tab{ padding:9px 12px; font-size:13px; }
-      button{ font-size:16px; }
-      .items-table{ display:block; overflow-x:auto; }
-      .row{ grid-template-columns:1fr; }
-      input[type="number"], input[type="text"], select, textarea{ font-size:18px; min-height:52px; }
-      .items-table input[type="number"], .items-table select{ height:56px; font-size:20px; }
-      .items-table th, .items-table td{ padding:12px; }
-      #summaryResult{ min-height: 360px !important; font-size: 16px; }
+    /* ── SUMMARY HEAD ── */
+    .summary-head{
+      background:linear-gradient(135deg,rgba(37,99,235,.07),rgba(14,165,233,.07));
+      border:1.5px solid rgba(37,99,235,.15);
+      border-radius:var(--radius);
+      padding:22px 26px;
+      margin:20px 0;
     }
+    .summary-head .badge{
+      display:inline-block;
+      font-weight:900;
+      font-size:11px;
+      letter-spacing:.08em;
+      padding:5px 12px;
+      border-radius:999px;
+      background:linear-gradient(135deg,var(--dark),#1e3a8a);
+      color:#fff;
+    }
+    .summary-head .title{ margin-top:10px; font-weight:900; font-size:19px; color:var(--dark); }
+    .summary-head .sub{ margin-top:4px; font-size:13px; color:var(--muted); }
+
+    /* ── FIELD STATES ── */
     .field-error{
-  border:2px solid #ef4444 !important;
-  box-shadow:0 0 0 3px rgba(239,68,68,.12) !important;
-  background:#fff7f7 !important;
-}
+      border:2px solid var(--red) !important;
+      box-shadow:0 0 0 4px rgba(220,38,38,.1) !important;
+      background:#fff7f7 !important;
+    }
+    .field-ok{
+      border:1.5px solid #e2e8f0;
+      box-shadow:var(--shadow-sm);
+    }
 
-.field-ok{
-  border:1px solid rgba(15,23,42,.10);
-  box-shadow:none;
-}
+    /* ── RESPONSIVE ── */
+    @media(max-width:900px){
+      .result-grid{ grid-template-columns:repeat(2,1fr); }
+      .copy-actions{ grid-template-columns:repeat(2,1fr); }
+    }
+    @media(max-width:640px){
+      .site-title{ font-size:17px; }
+      .page-wrap{ padding:18px 14px 50px; }
+      .container{ padding:18px 16px 22px; }
+      .tab{ padding:9px 14px; font-size:13px; }
+      .tab .tab-icon{ display:none; }
+      .row{ grid-template-columns:1fr; }
+      .price-preview{ grid-template-columns:1fr 1fr; }
+      input[type="number"],input[type="text"],select{ font-size:17px; min-height:50px; }
+      .items-table input[type="number"],.items-table select{ height:46px; font-size:16px; }
+      .items-table th,.items-table td{ padding:10px 8px; }
+      #summaryResult{ min-height:320px !important; font-size:15px; }
+      .result-grid{ grid-template-columns:1fr 1fr; }
+      .copy-actions{ grid-template-columns:1fr 1fr; }
+      button{ font-size:15px; }
+    }
   </style>
 </head>
 <body>
-  <h1>คำนวณค่า ผ้าปูบ่อ / คลองไส้ไก่ / บ่อกลม / MP Flow / สรุปออเดอร์</h1>
 
-  <div class="tabs">
-    <div class="tab active" data-tab="pond">บ่อขุด</div>
-    <div class="tab" data-tab="canal">คลองไส้ไก่</div>
-    <div class="tab" data-tab="geo">Geotextile</div>
-    <div class="tab" data-tab="circular">บ่อกลม</div>
-    <div class="tab" data-tab="flatbar">MP Flow</div>
-    <div class="tab" data-tab="summary">สรุปออเดอร์</div>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <div class="site-logo">MP</div>
+      <div>
+        <div class="site-title">ระบบคำนวณราคาผ้าปูบ่อ</div>
+        <div class="site-subtitle">Manutham Plastic • คำนวณอัตโนมัติ พร้อมสรุปออเดอร์</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs-wrap">
+    <div class="tabs">
+      <div class="tab active" data-tab="pond"><span class="tab-icon">🏞️</span> บ่อขุด</div>
+      <div class="tab" data-tab="canal"><span class="tab-icon">🌊</span> คลองไส้ไก่</div>
+      <div class="tab" data-tab="geo"><span class="tab-icon">🌿</span> Geotextile</div>
+      <div class="tab" data-tab="circular"><span class="tab-icon">⭕</span> บ่อกลม</div>
+      <div class="tab" data-tab="flatbar"><span class="tab-icon">🚛</span> MP Flow</div>
+      <div class="tab" data-tab="summary"><span class="tab-icon">📋</span> สรุปออเดอร์</div>
+    </div>
   </div>
+
+  <div class="page-wrap">
 
   <!-- POND -->
   <div class="container" id="pondContainer">
@@ -420,7 +665,7 @@
       <label>ความลึก (เมตร, ไม่บังคับ):</label>
       <input type="number" id="pondDepth" step="0.01" placeholder="กรอกความลึก (ถ้ามี)">
 
-      <label><input type="checkbox" id="pondDiscount5" value="yes"> ใช้ส่วนลดพิเศษ 5%</label>
+      <label><input type="checkbox" id="pondDiscount3" value="yes"> ส่วนลด 3% (เฉพาะค่าสินค้า)</label>
       <label><input type="checkbox" id="pondRoundCloth" value="yes"> ผ้ากลม (+10 บาท/ตร.ม.)</label>
 
 
@@ -493,7 +738,7 @@
           • LDPE 0.5 = 4 × 100 ม.
         </div>
       </div>
-      <label><input type="checkbox" id="canalDiscount5" value="yes"> ใช้ส่วนลดพิเศษ 5%</label>
+      <label><input type="checkbox" id="canalDiscount3" value="yes"> ส่วนลด 3% (เฉพาะค่าสินค้า)</label>
 
       <button type="submit" class="btn-primary">คำนวณ</button>
       <button type="button" id="canalReset" class="btn-warning hidden">คำนวณใหม่</button>
@@ -547,6 +792,8 @@
   ⚠️ พื้นที่พิเศษ เช่น เกาะ ดอย ชายแดน หรือพื้นที่เข้าถึงยาก อาจมีค่าใช้จ่ายเพิ่มเติมตามจริง
 </div>
 
+      <label><input type="checkbox" id="circularDiscount3"> ส่วนลด 3% (เฉพาะค่าสินค้า)</label>
+
       <button type="submit" class="btn-primary" style="margin-top:12px">สรุปออเดอร์บ่อกลม</button>
       <button type="button" id="circularReset" class="btn-warning hidden">เริ่มใหม่</button>
     </form>
@@ -584,8 +831,9 @@
 ✅ หากสั่งผ้าปูรถรวม 2 ผืนขึ้นไป ส่งฟรี
 </div>
 
-      <label><input type="checkbox" id="flatbarDiscount5"> ใช้ส่วนลดพิเศษ 5% (เฉพาะผ้า)</label>
-      <label><input type="checkbox" id="flatbarReview10"> โปรรีวิว ลด 10% (ซื้อผ้า + ชุดติดตั้ง)</label>
+      <label><input type="checkbox" id="flatbarDiscount3"> ส่วนลด 3% (เฉพาะค่าสินค้า)</label>
+      <label><input type="checkbox" id="flatbarDiscount5"> โปรรีวิว 5%</label>
+      <label><input type="checkbox" id="flatbarReview10"> โปรรีวิว 10% (ซื้อผ้า + ชุดติดตั้ง)</label>
     
 
       <hr style="opacity:.25; margin:16px 0">
@@ -724,7 +972,7 @@
 
       <button type="button" id="addItem" class="btn-secondary">+ เพิ่มรายการ</button>
 
-      <label><input type="checkbox" id="summaryDiscount5"> ใช้ส่วนลดพิเศษ 5%</label>
+      <label><input type="checkbox" id="summaryDiscount3"> ส่วนลด 3% (เฉพาะค่าสินค้า)</label>
       <label><input type="checkbox" id="summaryRoundCloth"> ผ้ากลม (+10 บาท/ตร.ม.)</label>
 
       <hr style="opacity:.25; margin:16px 0">
@@ -1003,7 +1251,7 @@ function getSummaryPriceMap(){
     Object.values(sections).forEach(id=>document.getElementById(id).classList.add('hidden'));
     const target = tab.getAttribute('data-tab');
     document.getElementById(sections[target]).classList.remove('hidden');
-    window.scrollTo({top:0,behavior:'smooth'});
+    document.querySelector('.page-wrap').scrollIntoView({behavior:'smooth',block:'start'});
   }));
 
   // POND
@@ -1015,7 +1263,6 @@ function getSummaryPriceMap(){
   const pondResultWrap = document.getElementById('pondResultWrap');
   const pondCopy = document.getElementById('pondCopy');
   const pondReset = document.getElementById('pondReset');
-  const pondDiscount5 = document.getElementById('pondDiscount5');
   const pondRoundCloth = document.getElementById('pondRoundCloth');
   const pondCardProduct = document.getElementById('pondCardProduct');
   const pondCardShip = document.getElementById('pondCardShip');
@@ -1077,8 +1324,11 @@ function getSummaryPriceMap(){
 
       let discountAmt = 0;
       let netTotal = fullTotal;
-      if (pondDiscount5 && pondDiscount5.checked) {
-        discountAmt = Math.floor(fullTotal * 0.05);
+      const pondDiscount3 = document.getElementById('pondDiscount3');
+      let pondDiscRate = 0;
+      if (pondDiscount3 && pondDiscount3.checked) {
+        pondDiscRate = 3;
+        discountAmt = Math.floor(fullTotal * 0.03);
         netTotal = fullTotal - discountAmt;
       }
 
@@ -1101,7 +1351,7 @@ function getSummaryPriceMap(){
       text += `ผ้าขนาด ${w} ม. × ${l} ม. = ${area.toLocaleString()} ตร.ม.\n(ขนาดผ้านี้ต้องวัดแนบพื้น และเผื่อขอบข้างละ 1 เมตรแล้ว)\n\n`;
       text += `ราคาผ้า ${fullTotal.toLocaleString()} บาท\n`;
       if (discountAmt > 0) {
-        text += `โปรรีวิว ลด 5% = -${discountAmt.toLocaleString()} บาท\n`;
+        text += `ส่วนลด ${pondDiscRate}% = -${discountAmt.toLocaleString()} บาท\n`;
         text += `ยอดหลังหักส่วนลด เหลือ ${netTotal.toLocaleString()} บาท\n`;
       }
       if (shipping > 0) text += `ค่าจัดส่ง ${shipping.toLocaleString()} บาท\n`;
@@ -1141,7 +1391,6 @@ function getSummaryPriceMap(){
   const canalCopy = document.getElementById('canalCopy');
   const canalReset = document.getElementById('canalReset');
   const canalSizeRadios = document.querySelectorAll('input[name="canalSize"]');
-  const canalDiscount5 = document.getElementById('canalDiscount5');
  const canalFullRoll = document.getElementById('canalFullRoll');
 const canalRollWrap = document.getElementById('canalRollWrap');
 const canalRollQty = document.getElementById('canalRollQty');
@@ -1176,8 +1425,6 @@ function applyCanalRollMode(){
     canalLength.value = 100;
     canalLength.disabled = true;
 
-    canalDiscount5.checked = false;
-    canalDiscount5.disabled = true;
 
     if (picked?.value === '0.3') {
       canalWidth.value = 6;
@@ -1189,7 +1436,6 @@ function applyCanalRollMode(){
   } else {
     canalRollWrap.classList.add('hidden');
     canalLength.disabled = false;
-    canalDiscount5.disabled = false;
     applyCanalWidthLock();
   }
 }
@@ -1269,8 +1515,11 @@ applyCanalRollMode();
     fullTotal = Math.floor(area * pricePerSqm);
     netTotal = fullTotal;
 
-    if (canalDiscount5 && canalDiscount5.checked) {
-      discountAmt = Math.floor(fullTotal * 0.05);
+    const canalDiscount3 = document.getElementById('canalDiscount3');
+    let canalDiscRate = 0;
+    if (canalDiscount3 && canalDiscount3.checked) {
+      canalDiscRate = 3;
+      discountAmt = Math.floor(fullTotal * 0.03);
       netTotal = fullTotal - discountAmt;
     }
 
@@ -1286,7 +1535,7 @@ applyCanalRollMode();
 
     if (discountAmt > 0) {
       text += `ยอดเต็ม (ก่อนส่วนลด) ${fullTotal.toLocaleString()} บาท\n`;
-      text += `โปรรีวิว ลด 5% = -${discountAmt.toLocaleString()} บาท\n`;
+      text += `ส่วนลด ${canalDiscRate}% = -${discountAmt.toLocaleString()} บาท\n`;
       text += `ยอดหลังหักส่วนลด เหลือ ${netTotal.toLocaleString()} บาท\n`;
     } else {
       text += `ราคาผ้า ${fullTotal.toLocaleString()} บาท\n`;
@@ -1508,6 +1757,10 @@ circularForm.onsubmit = function(e){
   const discount = calcCircularDiscount(totalQty);
   const afterDiscount = Math.max(0, fullTotal - discount);
 
+  const applyDisc3 = document.getElementById('circularDiscount3')?.checked;
+  const disc3Amt = applyDisc3 ? Math.floor(afterDiscount * 0.03) : 0;
+  const afterDiscount3 = afterDiscount - disc3Amt;
+
   const shipInfo = calcCircularShipping(distanceKm);
   const shipping = shipInfo.shipping;
   const isActualShipping = distanceKm > 800;
@@ -1520,11 +1773,16 @@ circularForm.onsubmit = function(e){
 
   out += listText;
   out += `📌 สรุปยอดสั่งซื้อทั้งหมด\n`;
-out += `ยอดเต็ม ${fmt(fullTotal)} บาท\n`;
+  out += `ยอดเต็ม ${fmt(fullTotal)} บาท\n`;
 
 if(discount > 0){
-  out += `ส่วนลด ${fmt(discount)} บาท\n`;
-  out += `ยอดหลังหักส่วนลด ${fmt(afterDiscount)} บาท\n`; 
+  out += `ส่วนลด (จำนวนบ่อ) ${fmt(discount)} บาท\n`;
+  out += `ยอดหลังหักส่วนลด ${fmt(afterDiscount)} บาท\n`;
+}
+
+if(disc3Amt > 0){
+  out += `ส่วนลด 3% = -${fmt(disc3Amt)} บาท\n`;
+  out += `ยอดสินค้าหลังหักส่วนลด ${fmt(afterDiscount3)} บาท\n`;
 }
 
 
@@ -1537,7 +1795,7 @@ if(discount > 0){
     out += `🚚 ระยะเวลาจัดส่ง / ติดตั้ง\n`;
     out += `จะมีทีมติดตั้งโทรไปนัดหมายอีกครั้งนะคะ`;
   } else {
-    const grandTotal = afterDiscount + shipping;
+    const grandTotal = afterDiscount3 + shipping;
     const deposit = Math.floor(grandTotal * 0.20);
     const cod = grandTotal - deposit;
 
@@ -1896,12 +2154,14 @@ ${unitText}`;
     if(kit && kit.text){ out += `\n\n${kit.text}`; }
 
     const applyDisc = document.getElementById('flatbarDiscount5').checked;
+    const applyDisc3 = document.getElementById('flatbarDiscount3').checked;
     const applyReview = document.getElementById('flatbarReview10').checked;
     const clothBase = cloth.price;
     const steelSum = kit ? kit.totalPrice : 0;
     const hasKit = steelSum > 0;
 
     let discAmt = 0;
+    let flatDiscRate = 0;
     let clothSum = clothBase;
     let steelAfterDisc = steelSum;
 
@@ -1909,9 +2169,16 @@ ${unitText}`;
       discAmt = Math.floor((clothBase + steelSum) * 0.10);
       clothSum = Math.floor(clothBase * 0.90);
       steelAfterDisc = Math.floor(steelSum * 0.90);
+      flatDiscRate = 10;
     } else if (applyDisc) {
       discAmt = Math.floor(clothBase * 0.05);
       clothSum = clothBase - discAmt;
+      flatDiscRate = 5;
+    } else if (applyDisc3) {
+      discAmt = Math.floor((clothBase + steelSum) * 0.03);
+      clothSum = Math.floor(clothBase * 0.97);
+      steelAfterDisc = Math.floor(steelSum * 0.97);
+      flatDiscRate = 3;
     }
 
     let subtotal = clothSum + steelAfterDisc;
@@ -1923,10 +2190,8 @@ ${unitText}`;
     if(grand>=5000){ dep = Math.floor(grand*0.1); }
     const cod = grand - dep;
 
-    if (applyReview && hasKit && discAmt > 0) {
-      out += `\n\nส่วนลดโปรรีวิว (${discAmt.toLocaleString()} บาท • 10%)`;
-    } else if (discAmt > 0) {
-      out += `\n\nส่วนลดโปรรีวิว (${discAmt.toLocaleString()} บาท • 5%)`;
+    if (discAmt > 0) {
+      out += `\n\nโปรรีวิว ${flatDiscRate}% = -${discAmt.toLocaleString()} บาท`;
     }
 
 if (ship > 0) {
@@ -1999,7 +2264,7 @@ out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLo
   }
 
   function buildCustomerText({
-    cust, list, geoText, fullItems, discountAmount, netItems, ship, grand, dep, bal
+    cust, list, geoText, fullItems, discountAmount, netItems, ship, grand, dep, bal, summaryDiscRate
   }){
     let out = cust ? `ส่ง\n${cust}\n\n` : '';
     if(list) out += `${list}\n`;
@@ -2007,7 +2272,7 @@ out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLo
 
     if(discountAmount > 0){
       out += `ยอดเต็ม ${Math.floor(fullItems).toLocaleString()} บาท\n`;
-      out += `ส่วนลด ${Math.floor(discountAmount).toLocaleString()} บาท\n`;
+      out += `ส่วนลด ${summaryDiscRate}% = -${Math.floor(discountAmount).toLocaleString()} บาท\n`;
       out += `ยอดหลังหักส่วนลด ${Math.floor(netItems).toLocaleString()} บาท\n`;
     }
 
@@ -2023,7 +2288,7 @@ out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLo
 
  function buildAdminText({
   cust, list, geoText, fullItems, discountAmount, netItems, ship, grand, dep, bal,
-  weightKgSum, page, admin, summaryRoundClothChecked
+  weightKgSum, page, admin, summaryRoundClothChecked, summaryDiscRate
 }){
   let out = cust ? `ส่ง\n${cust}\n\n` : '';
     if(list) out += `${list}\n`;
@@ -2031,7 +2296,7 @@ out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLo
 
     if(discountAmount > 0){
       out += `ยอดเต็ม (ก่อนส่วนลด) ${Math.floor(fullItems).toLocaleString()} บาท\n`;
-      out += `โปรรีวิว ลด = -${Math.floor(discountAmount).toLocaleString()} บาท\n`;
+      out += `ส่วนลด ${summaryDiscRate}% = -${Math.floor(discountAmount).toLocaleString()} บาท\n`;
       out += `ยอดหลังหักส่วนลด เหลือ ${Math.floor(netItems).toLocaleString()} บาท\n`;
     }
 
@@ -2125,7 +2390,7 @@ out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLo
     e.preventDefault();
 
     const cust = document.getElementById('custInfo').value.trim();
-    const useDiscount = document.getElementById('summaryDiscount5').checked;
+    const useDiscount3 = document.getElementById('summaryDiscount3').checked;
     const PRICE = getSummaryPriceMap();
     const MAT = c => c.endsWith('L') ? 'LDPE' : 'HDPE';
     const THK = c => c.replace(/[LH]$/, '');
@@ -2229,14 +2494,17 @@ Geotextile ${it.grade}g (${it.unit} บาท/ตร.ม.)
     const discount10Eligible = !!(useDiscount10 && itemsTotal > 0 && geoTotalSafe > 0 && geoCoverageRatio >= 0.69);
 
     let discountAmount = 0;
+    let summaryDiscRate = 0;
 
     if (discount10Eligible) {
       discountAmount = Math.floor((itemsTotal + geoTotalSafe) * 0.10);
+      summaryDiscRate = 10;
     } else if (useDiscount10 && itemsTotal > 0 && geoTotalSafe > 0) {
       adminNotes.push(`โปรรีวิว 10% + Geo ใช้ไม่ได้ เพราะ Geo คิดเป็น ${(geoCoverageRatio * 100).toFixed(1)}% ของพื้นที่ผ้า`);
-   } else if (useDiscount) {
-  discountAmount = Math.floor((itemsTotal + geoTotalSafe) * 0.05);
-}
+    } else if (useDiscount3) {
+      discountAmount = Math.floor((itemsTotal + geoTotalSafe) * 0.03);
+      summaryDiscRate = 3;
+    }
 
     let subtotalItems = (itemsTotal + geoTotalSafe) - discountAmount;
     const fullItems = (itemsTotal + geoTotalSafe);
@@ -2261,12 +2529,12 @@ Geotextile ${it.grade}g (${it.unit} บาท/ตร.ม.)
     updateSummaryAdminAlert(adminNotes);
 
     const customerText = buildCustomerText({
-      cust, list, geoText, fullItems, discountAmount, netItems, ship, grand, dep, bal
+      cust, list, geoText, fullItems, discountAmount, netItems, ship, grand, dep, bal, summaryDiscRate
     });
 
     const adminText = buildAdminText({
       cust, list, geoText, fullItems, discountAmount, netItems, ship, grand, dep, bal,
-      weightKgSum, page, admin, summaryRoundClothChecked
+      weightKgSum, page, admin, summaryRoundClothChecked, summaryDiscRate
     });
 
     latestSummaryTexts.customer = customerText;
@@ -2301,5 +2569,6 @@ Geotextile ${it.grade}g (${it.unit} บาท/ตร.ม.)
     await copyText(latestSummaryTexts.admin || '');
   };
 </script>
+</div><!-- /page-wrap -->
 </body>
 </html>
