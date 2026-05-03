@@ -4,646 +4,402 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>คำนวณค่า ผ้าปูบ่อ • คลองไส้ไก่ • บ่อกลม • MP Flow • สรุปออเดอร์</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root{
-      --blue:#1e40af;
-      --blue-mid:#2563eb;
-      --blue-light:#60a5fa;
-      --cyan:#0ea5e9;
-      --teal:#0d9488;
-      --green:#16a34a;
-      --red:#dc2626;
-      --yellow:#d97706;
-      --dark:#0f172a;
-      --dark2:#1e293b;
-      --muted:#64748b;
-      --bg:#f0f4ff;
-      --card:#ffffff;
-      --radius:18px;
-      --shadow-sm:0 2px 8px rgba(15,23,42,.07);
-      --shadow:0 8px 32px rgba(15,23,42,.10);
-      --shadow-lg:0 20px 60px rgba(15,23,42,.14);
+      --mp-black:#0b1220;
+      --mp-dark:#111827;
+      --mp-gray:#6b7280;
+      --mp-light:#f6f7fb;
+      --mp-blue:#2563eb;
+      --mp-blue-2:#60a5fa;
+      --mp-green:#22c55e;
+      --mp-red:#ef4444;
+      --mp-yellow:#facc15;
+      --shadow:0 10px 30px rgba(2,6,23,.10);
+      --radius:16px;
+      --clr-primary: var(--mp-blue);
+      --clr-primary-dark:#1d4ed8;
+      --clr-secondary: var(--mp-blue-2);
+      --clr-danger: var(--mp-red);
+      --clr-warning: var(--mp-yellow);
+      --clr-bg: var(--mp-light);
+      --clr-card: #ffffff;
+      --clr-muted: var(--mp-gray);
     }
 
-    *{ box-sizing:border-box; margin:0; padding:0; }
+    *{box-sizing:border-box;font-family:'Segoe UI', Tahoma, Arial, sans-serif}
     body{
-      font-family:'Sarabun','Segoe UI',sans-serif;
-      background: var(--bg);
-      background-image:
-        radial-gradient(ellipse 900px 500px at 0% 0%, rgba(37,99,235,.13) 0%, transparent 60%),
-        radial-gradient(ellipse 700px 400px at 100% 100%, rgba(14,165,233,.10) 0%, transparent 60%);
-      background-attachment: fixed;
-      color: var(--dark);
-      min-height:100vh;
+      margin:0;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(900px 500px at 90% 10%, rgba(96,165,250,.12), transparent 55%),
+        var(--clr-bg);
+      color:#0f172a;
     }
 
-    /* ── HEADER ── */
-    .site-header{
-      background: linear-gradient(135deg, var(--dark) 0%, #1e3a8a 60%, #1e40af 100%);
-      padding: 20px 20px 0;
-      position: relative;
-      overflow: hidden;
-    }
-    .site-header::before{
-      content:'';
-      position:absolute; inset:0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    }
-    .site-header-inner{
-      max-width:1100px;
-      margin:0 auto;
-      display:flex;
-      align-items:center;
-      gap:14px;
-      position:relative;
-    }
-    .site-logo{
-      width:48px; height:48px;
-      background: linear-gradient(135deg,#60a5fa,#2563eb);
-      border-radius:14px;
-      display:flex; align-items:center; justify-content:center;
-      font-size:22px; font-weight:900; color:#fff;
-      box-shadow: 0 4px 16px rgba(37,99,235,.4);
-      flex-shrink:0;
-    }
-    .site-title{
-      color:#fff;
-      font-size:20px;
+    h1{
+      text-align:center;
+      margin:22px 0 14px;
+      font-size:22px;
       font-weight:800;
-      line-height:1.2;
+      letter-spacing:-.2px;
     }
-    .site-subtitle{
-      color: rgba(255,255,255,.6);
-      font-size:13px;
-      font-weight:500;
-      margin-top:2px;
+    h1:after{
+      content:"";
+      display:block;
+      width:88px;
+      height:4px;
+      margin:10px auto 0;
+      border-radius:999px;
+      background: linear-gradient(90deg, var(--mp-blue), var(--mp-blue-2));
+      opacity:.9;
     }
 
-    /* ── TABS ── */
-    .tabs-wrap{
-      background: linear-gradient(135deg, var(--dark) 0%, #1e3a8a 60%, #1e40af 100%);
-      padding: 16px 20px 0;
-      position:sticky;
-      top:0;
-      z-index:100;
-      box-shadow: 0 4px 20px rgba(15,23,42,.25);
-    }
     .tabs{
       display:flex;
-      gap:4px;
-      flex-wrap:nowrap;
-      overflow-x:auto;
-      scrollbar-width:none;
-      max-width:1100px;
-      margin:0 auto;
-      padding-bottom:1px;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:0 0 14px;
+      padding:0 12px;
     }
-    .tabs::-webkit-scrollbar{ display:none; }
     .tab{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      padding:10px 18px;
+      padding:10px 14px;
       cursor:pointer;
-      border-radius:12px 12px 0 0;
-      border:none;
-      font-weight:700;
-      font-size:14px;
-      color:rgba(255,255,255,.65);
-      background:transparent;
-      white-space:nowrap;
-      transition:all .22s cubic-bezier(.4,0,.2,1);
-      position:relative;
-      font-family:'Sarabun',sans-serif;
-    }
-    .tab .tab-icon{ font-size:16px; }
-    .tab:hover{
-      color:rgba(255,255,255,.9);
-      background:rgba(255,255,255,.08);
-    }
-    .tab.active{
-      background: var(--bg);
-      color: var(--blue-mid);
+      background: rgba(255,255,255,.75);
+      backdrop-filter: blur(10px);
+      border-radius:999px;
+      border:1px solid rgba(15,23,42,.08);
+      transition:.22s;
       font-weight:800;
-      box-shadow: 0 -2px 0 var(--blue-mid) inset;
+      color:#0f172a;
+      box-shadow: 0 6px 18px rgba(2,6,23,.06);
+    }
+    .tab:hover{ transform: translateY(-1px); }
+    .tab.active{
+      background: linear-gradient(135deg, var(--mp-blue), var(--mp-blue-2));
+      color:#fff;
+      border-color: transparent;
     }
 
-    /* ── CONTAINER ── */
-    .page-wrap{
-      max-width:1100px;
-      margin:0 auto;
-      padding:28px 20px 60px;
-    }
     .container{
-      background: var(--card);
+      max-width: 1040px;
+      margin: 0 auto 26px;
+      padding: 20px;
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(10px);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       border: 1px solid rgba(15,23,42,.06);
-      padding: 28px 28px 32px;
-      animation: fadeUp .35s ease both;
-    }
-    @keyframes fadeUp{
-      from{ opacity:0; transform:translateY(14px); }
-      to{ opacity:1; transform:translateY(0); }
     }
 
-    /* ── SECTION TITLE ── */
-    .section-title{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      margin-bottom:22px;
-      padding-bottom:14px;
-      border-bottom:2px solid var(--bg);
-    }
-    .section-icon{
-      width:38px; height:38px;
-      border-radius:10px;
-      background: linear-gradient(135deg,var(--blue-mid),var(--cyan));
-      display:flex; align-items:center; justify-content:center;
-      font-size:18px;
-      flex-shrink:0;
-      box-shadow: 0 4px 12px rgba(37,99,235,.25);
-    }
-    .section-label{ font-size:20px; font-weight:800; color:var(--dark); }
-    .section-sub{ font-size:13px; color:var(--muted); margin-top:2px; }
+    label{ display:block; margin-bottom:8px; font-weight:800; color:#0f172a; }
+    .radio-group{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+    .radio-group label{ font-weight:700; color:#111827; }
 
-    /* ── LABEL ── */
-    label{
-      display:block;
-      margin-bottom:7px;
-      font-weight:700;
-      font-size:14px;
-      color:#334155;
-      letter-spacing:.01em;
-    }
-    .radio-group{
-      display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px;
-    }
-    .radio-group label{
-      display:flex; align-items:center; gap:8px;
-      background:#f8fafc;
-      border:1.5px solid rgba(15,23,42,.09);
-      border-radius:10px;
-      padding:8px 14px;
-      cursor:pointer;
-      font-weight:600;
-      font-size:14px;
-      color:#334155;
-      transition:all .18s;
-    }
-    .radio-group label:hover{
-      border-color:var(--blue-light);
-      background:#eff6ff;
-    }
-    .radio-group input:checked + *,
-    .radio-group label:has(input:checked){
-      border-color:var(--blue-mid);
-      background:#eff6ff;
-      color:var(--blue-mid);
-    }
-
-    /* ── CHECKBOX TOGGLE ── */
-    .toggle-group{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-bottom:18px;
-    }
-    .toggle-group label,
-    label:has(input[type="checkbox"]){
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      background:#f8fafc;
-      border:1.5px solid rgba(15,23,42,.09);
-      border-radius:10px;
-      padding:9px 16px;
-      cursor:pointer;
-      font-weight:600;
-      font-size:13.5px;
-      color:#334155;
-      transition:all .18s;
-      margin-bottom:10px;
-    }
-    label:has(input[type="checkbox"]):hover{
-      border-color:var(--blue-light);
-      background:#eff6ff;
-    }
-    label:has(input[type="checkbox"]:checked){
-      border-color:var(--blue-mid);
-      background:linear-gradient(135deg,#eff6ff,#dbeafe);
-      color:var(--blue-mid);
-    }
-
-    /* ── INPUTS ── */
     input[type="number"], input[type="text"], select, textarea{
       width:100%;
-      padding:13px 16px;
-      border:1.5px solid #e2e8f0;
-      border-radius:12px;
+      padding:14px 16px;
+      border:1px solid rgba(15,23,42,.10);
+      border-radius:14px;
       margin-bottom:16px;
-      font-size:15px;
-      font-family:'Sarabun',sans-serif;
-      line-height:1.5;
+      font-size:16px;
+      line-height:1.4;
+      min-height:46px;
       background:#fff;
-      color:var(--dark);
-      transition:border-color .2s, box-shadow .2s, background .2s;
-      box-shadow: var(--shadow-sm);
+      transition:border-color .2s ease, box-shadow .2s ease;
+      color:#0f172a;
     }
     input[type="number"]:focus, input[type="text"]:focus, select:focus, textarea:focus{
       outline:none;
-      border-color:var(--blue-mid);
-      box-shadow:0 0 0 4px rgba(37,99,235,.12);
-      background:#fff;
-    }
-    input[type="number"]:hover, input[type="text"]:hover, select:hover{
       border-color:#93c5fd;
-    }
-    textarea{
-      resize:vertical;
-      min-height:120px;
-      background:#f8fafc;
-      font-size:14px;
-      line-height:1.7;
+      box-shadow:0 0 0 3px rgba(147,197,253,.35);
     }
 
-    /* ── BUTTONS ── */
+    textarea{
+      resize:none;
+      background:#f8fafc;
+      min-height:140px;
+    }
+
     button{
       border:none;
-      border-radius:12px;
-      padding:13px 22px;
+      border-radius:14px;
+      padding:12px 18px;
       font-size:15px;
-      font-weight:700;
-      font-family:'Sarabun',sans-serif;
+      font-weight:600;
       cursor:pointer;
-      transition:all .22s cubic-bezier(.4,0,.2,1);
-      margin-top:8px;
-      margin-bottom:16px;
-      letter-spacing:.01em;
+      transition:.25s;
+      margin-top: 10px;
+      margin-bottom: 20px;
     }
     .btn-primary{
-      background: linear-gradient(135deg, var(--blue-mid) 0%, var(--cyan) 100%);
+      background: linear-gradient(135deg, var(--mp-blue), var(--mp-blue-2));
       color:#fff;
-      box-shadow: 0 6px 20px rgba(37,99,235,.3);
-      width:100%;
-      padding:15px;
-      font-size:16px;
+      box-shadow: 0 10px 20px rgba(37,99,235,.18);
     }
-    .btn-primary:hover{
-      transform:translateY(-2px);
-      box-shadow:0 10px 28px rgba(37,99,235,.35);
-      filter:brightness(1.05);
-    }
-    .btn-primary:active{ transform:translateY(0); }
-    .btn-secondary{
-      background: linear-gradient(135deg,var(--dark),var(--dark2));
-      color:#fff;
-      box-shadow: 0 4px 12px rgba(15,23,42,.2);
-    }
-    .btn-secondary:hover{ transform:translateY(-1px); filter:brightness(1.1); }
-    .btn-warning{
-      background:linear-gradient(135deg,#fbbf24,#f59e0b);
-      color:var(--dark);
-      box-shadow:0 4px 12px rgba(245,158,11,.25);
-    }
-    .btn-warning:hover{ transform:translateY(-1px); }
-    .btn-danger{
-      background:linear-gradient(135deg,#ef4444,#dc2626);
-      color:#fff;
-      padding:8px 14px;
-      font-size:13px;
-      margin:0;
-      box-shadow:0 2px 8px rgba(220,38,38,.2);
-    }
-    .btn-danger:hover{ filter:brightness(1.1); }
+    .btn-primary:hover{ filter:brightness(.98); transform: translateY(-1px); }
+    .btn-secondary{ background:#0f172a; color:#fff; }
+    .btn-secondary:hover{ filter:brightness(1.05); }
+    .btn-warning{ background:#fde047; color:#111827; }
+    .btn-danger{ background:#ef4444; color:#fff; }
 
     .copy-btn{
       display:inline-flex;
       align-items:center;
       justify-content:center;
       gap:8px;
-      padding:11px 16px;
-      border-radius:12px;
-      background:linear-gradient(135deg,var(--dark),var(--dark2));
+      padding:10px 16px;
+      border-radius:14px;
+      background: #0f172a;
       color:#fff;
       font-weight:700;
-      font-family:'Sarabun',sans-serif;
-      font-size:14px;
-      border:none;
-      cursor:pointer;
-      box-shadow:0 4px 14px rgba(15,23,42,.18);
-      transition:all .2s;
-      margin:0;
+      box-shadow: 0 10px 20px rgba(2,6,23,.14);
     }
-    .copy-btn:hover{ transform:translateY(-1px); filter:brightness(1.15); }
+    .copy-btn:hover{ filter:brightness(1.05); }
 
     .hidden{ display:none !important; }
 
-    /* ── TABLE ── */
-    .table-wrap{
-      width:100%;
-      overflow-x:auto;
-      -webkit-overflow-scrolling:touch;
-      border-radius:14px;
-      border:1.5px solid #e2e8f0;
-      margin-bottom:16px;
-      box-shadow:var(--shadow-sm);
-    }
     .items-table{
       width:100%;
       border-collapse:collapse;
-      min-width:640px;
+      margin-bottom:14px;
+      border:1px solid rgba(15,23,42,.10);
+      border-radius:16px;
+      overflow:hidden;
     }
     .items-table thead{
-      background:linear-gradient(135deg,var(--dark),#1e3a8a);
-    }
-    .items-table th{
-      padding:13px 12px;
-      text-align:center;
+      background: linear-gradient(135deg, #0f172a, #1f2a44);
       color:#fff;
-      font-weight:700;
-      font-size:13px;
-      letter-spacing:.02em;
-      white-space:nowrap;
     }
-    .items-table td{
-      padding:10px 10px;
+    .items-table th, .items-table td{
+      padding:10px;
       text-align:center;
-      border-bottom:1px solid #f1f5f9;
     }
-    .items-table tbody tr{ background:#fff; transition:background .15s; }
-    .items-table tbody tr:hover{ background:#f8fafc; }
-    .items-table tbody tr:last-child td{ border-bottom:none; }
-    .items-table th:first-child, .items-table td:first-child{ min-width:190px; }
-    .items-table td:nth-child(2),
-    .items-table td:nth-child(3),
-    .items-table td:nth-child(4){ min-width:110px; }
-    .items-table input[type="number"],
-    .items-table select{
-      background:#f8fafc;
-      border:1.5px solid #e2e8f0;
-      border-radius:9px;
+    .items-table tbody tr:nth-child(odd){ background:#f8fafc; }
+    .items-table th:first-child, .items-table td:first-child{ min-width: 180px; }
+    .items-table input[type="number"], .items-table select{
+      color:#111827 !important;
+      -webkit-text-fill-color:#111827;
+      background:#fff;
       width:100%;
-      height:44px;
-      font-size:15px;
-      padding:8px 10px;
+      height:52px;
+      font-size:18px;
+      padding:10px 12px;
       text-align:center;
       margin-bottom:0;
-      box-shadow:none;
-      color:var(--dark);
-      font-family:'Sarabun',sans-serif;
     }
-    .items-table input[type="number"]:focus,
-    .items-table select:focus{
-      border-color:var(--blue-mid);
-      box-shadow:0 0 0 3px rgba(37,99,235,.1);
-      background:#fff;
-    }
-    .items-table input::placeholder{ color:#94a3b8; }
+    .items-table input::placeholder{ color:#9ca3af; }
 
-    /* ── HINT ── */
+    .items-table td:nth-child(2),
+    .items-table td:nth-child(3),
+    .items-table td:nth-child(4),
+    .items-table td:nth-child(6){ min-width:120px; }
+
     .hint{
-      background:linear-gradient(135deg,rgba(37,99,235,.05),rgba(14,165,233,.05));
-      border:1.5px dashed rgba(37,99,235,.2);
-      border-radius:12px;
-      padding:12px 16px;
-      margin:10px 0 16px;
       color:#475569;
       font-size:13px;
-      line-height:1.7;
-    }
-
-    /* ── DIVIDER ── */
-    hr{ border:none; border-top:2px solid var(--bg); margin:20px 0; }
-
-    /* ── GRID ── */
-    .row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-
-    /* ── PRICE CARDS (single) ── */
-    .price-preview{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:12px;
-      margin:16px 0;
-    }
-    .price-card{
-      background:linear-gradient(135deg,#f8fafc,#f1f5f9);
-      border:1.5px solid #e2e8f0;
+      background: rgba(37,99,235,.06);
+      border:1px dashed rgba(37,99,235,.25);
+      padding:10px 12px;
       border-radius:14px;
-      padding:16px;
-      text-align:center;
-      transition:all .2s;
-    }
-    .price-card:hover{ border-color:var(--blue-light); box-shadow:var(--shadow-sm); }
-    .price-card-label{ font-size:12px; color:var(--muted); font-weight:700; margin-bottom:6px; }
-    .price-card-value{ font-size:22px; font-weight:900; color:var(--dark); }
-    .price-card.highlight{
-      background:linear-gradient(135deg,#eff6ff,#dbeafe);
-      border-color:var(--blue-mid);
-    }
-    .price-card.highlight .price-card-value{ color:var(--blue-mid); }
-
-    /* ── RESULT TEXTAREA ── */
-    #pondResult, #canalResult, #circularResult, #flatbarResult, #geoResult{
-      background:#f8fafc;
-      border:1.5px solid #e2e8f0;
-      border-radius:14px;
-      font-size:14px;
-      line-height:1.8;
-      min-height:200px;
-      padding:16px;
-      color:var(--dark);
-      margin-top:16px;
-      box-shadow: var(--shadow-sm);
+      margin:8px 0 10px;
+      line-height:1.55;
+      word-break:break-word;
     }
 
-    /* ── RESULT CARD (สรุปออเดอร์) ── */
-    .result-card-wrap{ margin-top:20px; }
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
+
+    .summary-head{
+      background: linear-gradient(135deg, rgba(37,99,235,.08), rgba(96,165,250,.08));
+      border: 1px solid rgba(101,145,238,.18);
+      margin-top: 20px;
+      margin-bottom: 20px;
+      padding: 20px 24px;
+      border-radius:16px;
+    }
+    .summary-head .badge{
+      display:inline-block;
+      font-weight:900;
+      font-size:12px;
+      letter-spacing:.6px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#0f172a;
+      color:#fff;
+    }
+    .summary-head .title{
+      margin-top:8px;
+      font-weight:900;
+      font-size:18px;
+      color:#0f172a;
+    }
+    .summary-head .sub{
+      margin-top:4px;
+      font-size:13px;
+      color:#334155;
+    }
+
+    .table-wrap{
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,.10);
+      touch-action: pan-x;
+    }
+    .table-wrap .items-table{
+      border: 0;
+      border-radius: 0;
+      overflow: visible;
+      min-width: 720px;
+      margin-bottom:0;
+    }
+
+    #geoItemsTableSummary thead{
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color:#fff;
+    }
+    #geoItemsTableSummary thead th{ color:#fff; }
+    #geoItemsTableSummary{
+      border: 1px solid rgba(34,197,94,.25);
+    }
+    #geoItemsTableSummary tbody tr:nth-child(odd){
+      background: rgba(34,197,94,.06);
+    }
+
+    .result-card-wrap{
+      margin-top:18px;
+    }
     .result-card{
       background:#fff;
-      border:1.5px solid #e2e8f0;
-      border-radius:var(--radius);
-      padding:24px;
-      box-shadow:var(--shadow-lg);
-      animation:fadeUp .3s ease both;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:20px;
+      padding:18px;
+      box-shadow:0 20px 50px rgba(2,6,23,.08);
     }
     .result-card-head{
       display:flex;
       justify-content:space-between;
-      align-items:flex-start;
-      margin-bottom:20px;
-      padding-bottom:16px;
-      border-bottom:2px solid var(--bg);
+      align-items:center;
+      margin-bottom:14px;
     }
     .result-badge{
       display:inline-block;
-      padding:5px 12px;
+      padding:6px 10px;
       border-radius:999px;
-      background:linear-gradient(135deg,var(--dark),#1e3a8a);
+      background:#0f172a;
       color:#fff;
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.08em;
+      font-size:12px;
+      font-weight:900;
     }
     .result-title{
-      font-size:22px;
+      font-size:20px;
       font-weight:900;
-      color:var(--dark);
+      color:#0f172a;
       margin-top:8px;
     }
     .result-grid{
       display:grid;
       grid-template-columns:repeat(4,1fr);
       gap:12px;
-      margin-bottom:20px;
+      margin-bottom:18px;
     }
     .result-box{
       background:#f8fafc;
-      border:1.5px solid #e2e8f0;
-      border-radius:14px;
-      padding:16px;
-      transition:all .2s;
+      border:1px solid rgba(15,23,42,.06);
+      border-radius:16px;
+      padding:14px;
     }
-    .result-box:hover{ border-color:#93c5fd; }
     .result-box.highlight{
-      background:linear-gradient(135deg,#eff6ff,#dbeafe);
-      border-color:var(--blue-mid);
+      background:linear-gradient(135deg, rgba(37,99,235,.10), rgba(96,165,250,.15));
+      border-color:rgba(37,99,235,.18);
     }
     .result-box-label{
-      font-size:11px;
-      color:var(--muted);
-      font-weight:800;
-      margin-bottom:8px;
-      text-transform:uppercase;
-      letter-spacing:.06em;
+      font-size:12px;
+      color:#64748b;
+      font-weight:700;
+      margin-bottom:6px;
     }
     .result-box-value{
-      font-size:20px;
+      font-size:22px;
       font-weight:900;
-      color:var(--dark);
+      color:#0f172a;
     }
-    .result-box.highlight .result-box-value{ color:var(--blue-mid); }
 
     .admin-alert{
       display:none;
-      margin-bottom:18px;
-      padding:14px 18px;
-      border-radius:14px;
-      border:1.5px solid rgba(217,119,6,.3);
-      background:linear-gradient(135deg,rgba(254,243,199,.8),rgba(253,230,138,.4));
-      color:#92400e;
+      margin-bottom:16px;
+      padding:14px 16px;
+      border-radius:16px;
+      border:1px solid rgba(250,204,21,.45);
+      background: linear-gradient(135deg, rgba(250,204,21,.12), rgba(245,158,11,.08));
+      color:#78350f;
       font-size:14px;
-      line-height:1.65;
-      font-weight:600;
+      line-height:1.55;
+      font-weight:700;
     }
-    .admin-alert.show{ display:block; }
+    .admin-alert.show{
+      display:block;
+    }
 
-    .result-section{ margin-top:16px; }
     .result-section-title{
-      font-size:14px;
-      font-weight:800;
+      font-size:15px;
+      font-weight:900;
       margin-bottom:8px;
-      color:var(--dark);
-      text-transform:uppercase;
-      letter-spacing:.05em;
+      color:#0f172a;
     }
     .copy-actions{
       display:grid;
       grid-template-columns:repeat(4,1fr);
       gap:10px;
-      margin-top:16px;
+      margin-top:14px;
     }
 
-    /* ── GEO TABLE ── */
-    #geoItemsTableSummary thead{
-      background:linear-gradient(135deg,#0ea5e9,#16a34a);
-    }
-    #geoItemsTableSummary{
-      border-color:rgba(34,197,94,.2);
-    }
-    #geoItemsTableSummary tbody tr:nth-child(odd){ background:rgba(34,197,94,.04); }
-
-    /* ── SUMMARY HEAD ── */
-    .summary-head{
-      background:linear-gradient(135deg,rgba(37,99,235,.07),rgba(14,165,233,.07));
-      border:1.5px solid rgba(37,99,235,.15);
-      border-radius:var(--radius);
-      padding:22px 26px;
-      margin:20px 0;
-    }
-    .summary-head .badge{
-      display:inline-block;
-      font-weight:900;
-      font-size:11px;
-      letter-spacing:.08em;
-      padding:5px 12px;
-      border-radius:999px;
-      background:linear-gradient(135deg,var(--dark),#1e3a8a);
-      color:#fff;
-    }
-    .summary-head .title{ margin-top:10px; font-weight:900; font-size:19px; color:var(--dark); }
-    .summary-head .sub{ margin-top:4px; font-size:13px; color:var(--muted); }
-
-    /* ── FIELD STATES ── */
-    .field-error{
-      border:2px solid var(--red) !important;
-      box-shadow:0 0 0 4px rgba(220,38,38,.1) !important;
-      background:#fff7f7 !important;
-    }
-    .field-ok{
-      border:1.5px solid #e2e8f0;
-      box-shadow:var(--shadow-sm);
+    @media (max-width:800px){
+      .result-grid,
+      .copy-actions{
+        grid-template-columns:repeat(2,1fr);
+      }
     }
 
-    /* ── RESPONSIVE ── */
-    @media(max-width:900px){
-      .result-grid{ grid-template-columns:repeat(2,1fr); }
-      .copy-actions{ grid-template-columns:repeat(2,1fr); }
-    }
-    @media(max-width:640px){
-      .site-title{ font-size:17px; }
-      .page-wrap{ padding:18px 14px 50px; }
-      .container{ padding:18px 16px 22px; }
-      .tab{ padding:9px 14px; font-size:13px; }
-      .tab .tab-icon{ display:none; }
+    @media (max-width:600px){
+      h1{ font-size:18px; }
+      .container{ padding:14px; }
+      .tab{ padding:9px 12px; font-size:13px; }
+      button{ font-size:16px; }
+      .items-table{ display:block; overflow-x:auto; }
       .row{ grid-template-columns:1fr; }
-      .price-preview{ grid-template-columns:1fr 1fr; }
-      input[type="number"],input[type="text"],select{ font-size:17px; min-height:50px; }
-      .items-table input[type="number"],.items-table select{ height:46px; font-size:16px; }
-      .items-table th,.items-table td{ padding:10px 8px; }
-      #summaryResult{ min-height:320px !important; font-size:15px; }
-      .result-grid{ grid-template-columns:1fr 1fr; }
-      .copy-actions{ grid-template-columns:1fr 1fr; }
-      button{ font-size:15px; }
+      input[type="number"], input[type="text"], select, textarea{ font-size:18px; min-height:52px; }
+      .items-table input[type="number"], .items-table select{ height:56px; font-size:20px; }
+      .items-table th, .items-table td{ padding:12px; }
+      #summaryResult{ min-height: 360px !important; font-size: 16px; }
     }
+    .field-error{
+  border:2px solid #ef4444 !important;
+  box-shadow:0 0 0 3px rgba(239,68,68,.12) !important;
+  background:#fff7f7 !important;
+}
+
+.field-ok{
+  border:1px solid rgba(15,23,42,.10);
+  box-shadow:none;
+}
   </style>
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="site-header-inner">
-      <div class="site-logo">MP</div>
-      <div>
-        <div class="site-title">ระบบคำนวณราคาผ้าปูบ่อ</div>
-        <div class="site-subtitle">Manutham Plastic • คำนวณอัตโนมัติ พร้อมสรุปออเดอร์</div>
-      </div>
-    </div>
-  </header>
+  <h1>คำนวณค่า ผ้าปูบ่อ / คลองไส้ไก่ / บ่อกลม / MP Flow / สรุปออเดอร์</h1>
 
-  <div class="tabs-wrap">
-    <div class="tabs">
-      <div class="tab active" data-tab="pond"><span class="tab-icon">🏞️</span> บ่อขุด</div>
-      <div class="tab" data-tab="canal"><span class="tab-icon">🌊</span> คลองไส้ไก่</div>
-      <div class="tab" data-tab="geo"><span class="tab-icon">🌿</span> Geotextile</div>
-      <div class="tab" data-tab="circular"><span class="tab-icon">⭕</span> บ่อกลม</div>
-      <div class="tab" data-tab="flatbar"><span class="tab-icon">🚛</span> MP Flow</div>
-      <div class="tab" data-tab="summary"><span class="tab-icon">📋</span> สรุปออเดอร์</div>
-    </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="pond">บ่อขุด</div>
+    <div class="tab" data-tab="canal">คลองไส้ไก่</div>
+    <div class="tab" data-tab="geo">Geotextile</div>
+    <div class="tab" data-tab="circular">บ่อกลม</div>
+    <div class="tab" data-tab="flatbar">MP Flow</div>
+    <div class="tab" data-tab="summary">สรุปออเดอร์</div>
   </div>
-
-  <div class="page-wrap">
 
   <!-- POND -->
   <div class="container" id="pondContainer">
@@ -1002,6 +758,31 @@
 
       <label><input type="checkbox" id="summaryDiscount10"> ส่วนลด 10% (โปรรีวิว ผ้า + Geo)</label>
 
+      <hr style="opacity:.25; margin:16px 0">
+
+      <h3 style="margin-top:0">รายการ HydroPod (บ่อกลม)</h3>
+      <div class="table-wrap">
+        <table class="items-table" id="hydroItemsTableSummary">
+          <thead>
+            <tr>
+              <th>ประเภท</th>
+              <th>สูง</th>
+              <th>เส้นผ่านศูนย์กลาง</th>
+              <th>จำนวน</th>
+              <th>ลบ</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <button type="button" id="addHydroItemSummary" class="btn-secondary">+ เพิ่มรายการ HydroPod</button>
+      <div style="display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap;">
+        <label style="margin:0; white-space:nowrap">ระยะทางจัดส่ง HydroPod (กม.):</label>
+        <input type="number" id="hydroDistanceSummary" min="0" step="1" placeholder="เช่น 150" style="width:130px">
+      </div>
+      <div class="hint">ส่วนลดตามจำนวน HydroPod: 2 บ่อ = -3,000 / 3 บ่อ = -6,000 / 4 บ่อ = -10,000 / 6+ บ่อ = -20,000 บาท • ฟรีค่าส่ง ≤200 กม.</div>
+
       <label>เลือกเพจ</label>
       <select id="pageSelect">
         <option value="">เลือกเพจ...</option>
@@ -1251,7 +1032,7 @@ function getSummaryPriceMap(){
     Object.values(sections).forEach(id=>document.getElementById(id).classList.add('hidden'));
     const target = tab.getAttribute('data-tab');
     document.getElementById(sections[target]).classList.remove('hidden');
-    document.querySelector('.page-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+    window.scrollTo({top:0,behavior:'smooth'});
   }));
 
   // POND
@@ -2264,21 +2045,33 @@ out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLo
   }
 
   function buildCustomerText({
-    cust, list, geoText, fullItems, discountAmount, netItems, ship, grand, dep, bal, summaryDiscRate
+    cust, list, geoText, hydroText, hydroNetTotal, hydroQtyDiscount, hydroShip, hydroQty,
+    fullItems, discountAmount, netItems, ship, grand, dep, bal, summaryDiscRate
   }){
     let out = cust ? `ส่ง\n${cust}\n\n` : '';
     if(list) out += `${list}\n`;
     if(geoText) out += `${geoText}\n`;
+    if(hydroText) out += `${hydroText}\n`;
 
-    if(discountAmount > 0){
-      out += `ยอดเต็ม ${Math.floor(fullItems).toLocaleString()} บาท\n`;
-      out += `ส่วนลด ${summaryDiscRate}% = -${Math.floor(discountAmount).toLocaleString()} บาท\n`;
-      out += `ยอดหลังหักส่วนลด ${Math.floor(netItems).toLocaleString()} บาท\n`;
+    if(fullItems > 0){
+      if(discountAmount > 0){
+        out += `ยอดเต็ม ${Math.floor(fullItems).toLocaleString()} บาท\n`;
+        out += `ส่วนลด ${summaryDiscRate}% = -${Math.floor(discountAmount).toLocaleString()} บาท\n`;
+        out += `ยอดหลังหักส่วนลด ${Math.floor(netItems).toLocaleString()} บาท\n`;
+      }
+      out += ship ? `ค่าจัดส่ง ${Math.floor(ship).toLocaleString()} บาท\n` : `ส่งฟรี\n`;
     }
 
-    out += ship ? `ค่าจัดส่ง ${Math.floor(ship).toLocaleString()} บาท\n` : `ส่งฟรี\n`;
-    out += `ยอดรวม ${Math.floor(grand).toLocaleString()} บาท\n`;
+    if(hydroText){
+      if(hydroQtyDiscount > 0){
+        out += `ยอดรวม HydroPod ${fmt(hydroNetTotal + hydroQtyDiscount)} บาท\n`;
+        out += `ส่วนลดตามจำนวน ${hydroQty} บ่อ = -${fmt(hydroQtyDiscount)} บาท\n`;
+        out += `ยอดสุทธิ HydroPod ${fmt(hydroNetTotal)} บาท\n`;
+      }
+      out += hydroShip > 0 ? `ค่าจัดส่ง HydroPod ${fmt(hydroShip)} บาท\n` : `ค่าจัดส่ง HydroPod ฟรี\n`;
+    }
 
+    out += `ยอดรวม ${Math.floor(grand).toLocaleString()} บาท\n`;
     if(dep > 0) out += `มัดจำ 10% ${Math.floor(dep).toLocaleString()} บาท\n`;
     out += `COD ${Math.floor(bal).toLocaleString()} บาท\n\n`;
     out += `🚚 สินค้าจะจัดส่งถึงลูกค้าภายใน 3-5 วันนะคะ`;
@@ -2287,20 +2080,33 @@ out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLo
   }
 
  function buildAdminText({
-  cust, list, geoText, fullItems, discountAmount, netItems, ship, grand, dep, bal,
+  cust, list, geoText, hydroText, hydroNetTotal, hydroQtyDiscount, hydroShip, hydroQty,
+  fullItems, discountAmount, netItems, ship, grand, dep, bal,
   weightKgSum, page, admin, summaryRoundClothChecked, summaryDiscRate
 }){
   let out = cust ? `ส่ง\n${cust}\n\n` : '';
     if(list) out += `${list}\n`;
     if(geoText) out += `${geoText}\n`;
+    if(hydroText) out += `${hydroText}\n`;
 
-    if(discountAmount > 0){
-      out += `ยอดเต็ม (ก่อนส่วนลด) ${Math.floor(fullItems).toLocaleString()} บาท\n`;
-      out += `ส่วนลด ${summaryDiscRate}% = -${Math.floor(discountAmount).toLocaleString()} บาท\n`;
-      out += `ยอดหลังหักส่วนลด เหลือ ${Math.floor(netItems).toLocaleString()} บาท\n`;
+    if(fullItems > 0){
+      if(discountAmount > 0){
+        out += `ยอดเต็ม (ก่อนส่วนลด) ${Math.floor(fullItems).toLocaleString()} บาท\n`;
+        out += `ส่วนลด ${summaryDiscRate}% = -${Math.floor(discountAmount).toLocaleString()} บาท\n`;
+        out += `ยอดหลังหักส่วนลด เหลือ ${Math.floor(netItems).toLocaleString()} บาท\n`;
+      }
+      out += ship ? `ค่าจัดส่ง ${Math.floor(ship).toLocaleString()} บาท\n` : `ส่งฟรี ชำระเงินเมื่อได้รับของค่ะ\n`;
     }
 
-    out += ship ? `ค่าจัดส่ง ${Math.floor(ship).toLocaleString()} บาท\n` : `ส่งฟรี ชำระเงินเมื่อได้รับของค่ะ\n`;
+    if(hydroText){
+      if(hydroQtyDiscount > 0){
+        out += `ยอดรวม HydroPod ${fmt(hydroNetTotal + hydroQtyDiscount)} บาท\n`;
+        out += `ส่วนลดตามจำนวน ${hydroQty} บ่อ = -${fmt(hydroQtyDiscount)} บาท\n`;
+        out += `ยอดสุทธิ HydroPod ${fmt(hydroNetTotal)} บาท\n`;
+      }
+      out += hydroShip > 0 ? `ค่าจัดส่ง HydroPod ${fmt(hydroShip)} บาท\n` : `ค่าจัดส่ง HydroPod ฟรี\n`;
+    }
+
     out += `📌 สรุปยอดสั่งซื้อทั้งหมด\nยอดรวม ${Math.floor(grand).toLocaleString()} บาท\n`;
     out += `น้ำหนักรวมประมาณ ${weightKgSum.toFixed(1)} กก.\n`;
 
@@ -2359,6 +2165,63 @@ out += `\n\nรวมยอดทั้งหมด (${totalLabel}) ${grand.toLo
       items.push({ grade, w, l, q, unit, kgPerSqm });
     }
 
+    return items;
+  }
+
+  // HydroPod rows on summary page
+  const hydroTbodySummary = document.querySelector('#hydroItemsTableSummary tbody');
+  const addHydroBtn = document.getElementById('addHydroItemSummary');
+
+  function addHydroRowSummary() {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <select class="hm">
+          <option value="ldpe05">LDPE 0.5 (จับจีบ)</option>
+          <option value="hdpe075">HDPE 0.75 (จับจีบ)</option>
+        </select>
+      </td>
+      <td>
+        <select class="hh">
+          <option value="0.8">สูง 0.8 ม.</option>
+          <option value="1.2">สูง 1.2 ม.</option>
+        </select>
+      </td>
+      <td>
+        <select class="hd">
+          <option value="4">4 ม.</option>
+          <option value="5">5 ม.</option>
+          <option value="6">6 ม.</option>
+          <option value="8">8 ม.</option>
+          <option value="10">10 ม.</option>
+          <option value="12">12 ม.</option>
+        </select>
+      </td>
+      <td><input class="hq" type="number" min="1" step="1" value="1"></td>
+      <td><button type="button" class="btn-danger hdel">ลบ</button></td>
+    `;
+    tr.querySelector('.hdel').onclick = () => tr.remove();
+    hydroTbodySummary.appendChild(tr);
+  }
+
+  if (addHydroBtn) {
+    addHydroBtn.onclick = addHydroRowSummary;
+  }
+
+  function collectHydroSummaryItems() {
+    if (!hydroTbodySummary) return [];
+    const rows = [...hydroTbodySummary.querySelectorAll('tr')];
+    const items = [];
+    for (const tr of rows) {
+      const mat = tr.querySelector('.hm')?.value;
+      const h   = tr.querySelector('.hh')?.value;
+      const d   = tr.querySelector('.hd')?.value;
+      const q   = Math.max(1, parseInt(tr.querySelector('.hq')?.value || 1, 10));
+      const group = CIRCULAR[mat];
+      const data  = group?.[h]?.[d];
+      if (!group || !data) continue;
+      items.push({ mat, h, d, q, volume: data.volume, unitPrice: data.price });
+    }
     return items;
   }
 
@@ -2482,8 +2345,36 @@ Geotextile ${it.grade}g (${it.unit} บาท/ตร.ม.)
       }
     }
 
-    if (total === 0 && geoTotal === 0) {
-      alert('กรุณากรอกอย่างน้อย 1 รายการ (ผ้า หรือ Geotextile)');
+    // HydroPod calculation
+    const hydroItems = collectHydroSummaryItems();
+    const hydroDistanceKm = parseFloat(document.getElementById('hydroDistanceSummary')?.value || 0);
+    let hydroTotal = 0;
+    let hydroText = '';
+    let hydroIdx = 1;
+
+    for (const it of hydroItems) {
+      const lineTotal = it.unitPrice * it.q;
+      hydroTotal += lineTotal;
+      const mmText = it.mat === 'ldpe05' ? 'LDPE 0.5 มม.' : 'HDPE 0.75 มม.';
+      hydroText +=
+`📍 รายการ HydroPod ${hydroIdx}:
+บ่อกลม HydroPod ผ้า ${mmText}
+สูง ${it.h} ม. เส้นผ่านศูนย์กลาง ${it.d} ม.
+ความจุประมาณ ${fmt(it.volume)} ลิตร
+ราคา ${fmt(it.unitPrice)} บาท จำนวน ${it.q} บ่อ
+
+`;
+      hydroIdx++;
+    }
+
+    const hydroQty = hydroItems.reduce((s, it) => s + it.q, 0);
+    const hydroQtyDiscount = hydroItems.length > 0 ? calcCircularDiscount(hydroQty) : 0;
+    const hydroNetTotal = Math.max(0, hydroTotal - hydroQtyDiscount);
+    const hydroShipResult = hydroItems.length > 0 ? calcCircularShipping(hydroDistanceKm) : { shipping: 0, note: '' };
+    const hydroShip = hydroShipResult.shipping;
+
+    if (total === 0 && geoTotal === 0 && hydroTotal === 0) {
+      alert('กรุณากรอกอย่างน้อย 1 รายการ (ผ้า, Geotextile หรือ HydroPod)');
       return;
     }
 
@@ -2511,7 +2402,7 @@ Geotextile ${it.grade}g (${it.unit} บาท/ตร.ม.)
     const netItems  = fullItems - discountAmount;
 
     let ship = calcShipCombined(plasticKgSum, geoArea);
-    const grand = Math.floor(subtotalItems + ship);
+    const grand = Math.floor(netItems + ship + hydroNetTotal + hydroShip);
     const dep = grand >= 5000 ? Math.floor(grand * 0.1) : 0;
     const bal = grand - dep;
 
@@ -2520,8 +2411,8 @@ Geotextile ${it.grade}g (${it.unit} บาท/ตร.ม.)
     const summaryRoundClothChecked = !!(summaryRoundCloth && summaryRoundCloth.checked);
 
     updateSummaryCard({
-      subtotal: netItems,
-      ship,
+      subtotal: netItems + hydroNetTotal,
+      ship: ship + hydroShip,
       dep,
       grand
     });
@@ -2529,11 +2420,13 @@ Geotextile ${it.grade}g (${it.unit} บาท/ตร.ม.)
     updateSummaryAdminAlert(adminNotes);
 
     const customerText = buildCustomerText({
-      cust, list, geoText, fullItems, discountAmount, netItems, ship, grand, dep, bal, summaryDiscRate
+      cust, list, geoText, hydroText, hydroNetTotal, hydroQtyDiscount, hydroShip, hydroQty,
+      fullItems, discountAmount, netItems, ship, grand, dep, bal, summaryDiscRate
     });
 
     const adminText = buildAdminText({
-      cust, list, geoText, fullItems, discountAmount, netItems, ship, grand, dep, bal,
+      cust, list, geoText, hydroText, hydroNetTotal, hydroQtyDiscount, hydroShip, hydroQty,
+      fullItems, discountAmount, netItems, ship, grand, dep, bal,
       weightKgSum, page, admin, summaryRoundClothChecked, summaryDiscRate
     });
 
@@ -2569,6 +2462,5 @@ Geotextile ${it.grade}g (${it.unit} บาท/ตร.ม.)
     await copyText(latestSummaryTexts.admin || '');
   };
 </script>
-</div><!-- /page-wrap -->
 </body>
 </html>
